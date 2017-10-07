@@ -1,18 +1,18 @@
 #ifndef EDGE_H
 
 #include <vector>
-#include "Status.h"
+#include "State.h"
 
 class Edge
 {
 public:
-	Edge(Status *start, Status *end, char character);
-	Status *start;
-	Status *end;
+	Edge(State *start, State *end, char character);
+	State *start;
+	State *end;
 	char character;
 
 	bool match(char c);
-	Status *stepNext();
+	State *stepNext();
 };
 
 #endif // !EDGE_H

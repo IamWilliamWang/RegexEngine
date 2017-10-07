@@ -1,6 +1,6 @@
 #include "Edge.h"
 
-Edge::Edge(Status *start, Status *end, char character)
+Edge::Edge(State *start, State *end, char character)
 {
 	this->start = start;
 	this->end = end;
@@ -9,10 +9,9 @@ Edge::Edge(Status *start, Status *end, char character)
 
 bool Edge::match(char c) {
 	if (this->character = '.') return true;
-	if ()
 }
 
-Status* Edge::stepNext() {
+State* Edge::stepNext() {
 	if (this->character = '.') return this->start;
 
 }

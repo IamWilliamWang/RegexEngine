@@ -5,10 +5,10 @@
 #include"Edge.h"
 using namespace std;
 
-class Status
+class State
 {
 public:
-	Status(bool FinalStatus, vector<Edge*> InEdges,	vector<Edge*> OutEdges);
+	State(bool FinalStatus, Edge* InEdge,	Edge*OutEdge);
 	bool FinalStatus;
 	vector<Edge*> InEdges;
 	vector<Edge*> OutEdges;

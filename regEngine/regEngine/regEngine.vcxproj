@@ -77,16 +77,14 @@
   <ItemGroup>
     <ClInclude Include="Edge.h" />
     <ClInclude Include="Nfa.h" />
-    <ClInclude Include="PostRegx.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Status.h" />
+    <ClInclude Include="State.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Edge.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Nfa.cpp" />
-    <ClCompile Include="PostRegx.cpp" />
-    <ClCompile Include="Status.cpp" />
+    <ClCompile Include="State.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="regEngine.rc" />
