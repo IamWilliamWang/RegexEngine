@@ -29,7 +29,7 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 	for (p = regex; *p; p++) {
 		switch (*p) {
 		case '.':	/* any */
-			out = new Edge(stateStack->top, nullptr, *p);
+			out = new Edge(stateStack->top, nullptr, ANY);
 			s = new State(false, out, nullptr);
 			patch(out, s);
 			patch(stateStack->top, out);
@@ -39,26 +39,26 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 		case '|':	/* alternate */
 			p++;
 			State *current = stateStack->top;
-			out = new Edge(Start, nullptr, NULL);
+			out = new Edge(Start, nullptr, EPSILON);
 			s = new State(false, out, nullptr);
 			patch(out, s);
 			patch(Start, out);
 			stateStack->push(s);
 			edgeStack->push(out);
 			s = regex2nfa(p, s);
-			out = new Edge(current, s, NULL);
+			out = new Edge(current, s, EPSILON);
 			patch(out, s);
 			patch(current, out);
 			break;
 		case '?':	/* zero or one */
-			out = new Edge(edgeStack->top->start, stateStack->top, NULL);			
+			out = new Edge(edgeStack->top->start, stateStack->top, EPSILON);
 			patch(out, stateStack->top);
 			patch(edgeStack->top->start, out);
 			edgeStack->push(out);
 			break;
 		case '*':	/* zero or more */
 			out = new Edge(edgeStack->top->start, edgeStack->top->start, edgeStack->top->character);
-			edgeStack->top->character = NULL;
+			edgeStack->top->character = EPSILON;
 			patch(out, edgeStack->top->start);
 			patch(edgeStack->top->start, out);
 			edgeStack->push(out);
@@ -68,7 +68,7 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			patch(out, stateStack->top);
 			patch(stateStack->top, out);
 			edgeStack->push(out);
-			out = new Edge(stateStack->top, nullptr, NULL);
+			out = new Edge(stateStack->top, nullptr, EPSILON);
 			s = new State(false, out, nullptr);
 			patch(out, s);
 			patch(stateStack->top, out);
@@ -81,15 +81,10 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			stateStack->push(s);
 			break;
 		case ')':
-			return stateStack->top;
+			return s;
 		case '[':
-			p++;
-			out = new Edge(stateStack->top, nullptr, *p);
-			s = group(p);
-			patch(out, s);
-			patch(stateStack->top, out);
-			stateStack->push(s);
-			edgeStack->push(out);
+			p++;			
+			if((s = group(p)) == nullptr) return nullptr;
 			break;
 		default:
 			out = new Edge(stateStack->top, nullptr, *p);
@@ -115,16 +110,38 @@ void patch(State *s, Edge *e) {
 }
 
 State *Nfa::group(char *p) {
-	for (p; *p; p++) {
+	Edge *out;
+	for (p; *p!=']'; p++) {
 		switch (*p) {
- 		case ']':
-
-			return stateStack->top;
-		default:
-			
+		case '0':
+		case 'a':
+		case 'A':
+			p++;
+			if (*p != '-') {
+				cout << "NFA built failed, please check if the regular expression is right!" << endl;
+				return	nullptr;
+			}
 			break;
+		case '9':
+			out = new Edge(stateStack->top, nullptr, NUM);
+			break;
+		case 'z':
+			out = new Edge(stateStack->top, nullptr, LCASES);
+			break;
+		case 'Z':
+			out = new Edge(stateStack->top, nullptr, UCASES);
+			break;
+		default:
+			cout << "NFA built failed, please check if the regular expression is right!" << endl;
+			return	nullptr;
 		}
+		State *s = new State(false, out, nullptr);
+		patch(out, s);
+		patch(stateStack->top, out);
+		stateStack->push(s);
+		edgeStack->push(out);
 	}
+	return stateStack->top;
 }
 
 
