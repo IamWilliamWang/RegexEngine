@@ -7,35 +7,27 @@
 using namespace std;
 
 Nfa::Nfa(char *regex)
-{
-	if ((this->Start = regex2nfa(regex)) != NULL) {
+{	
+	Start = new State(false, nullptr, nullptr);
+	stateStack->push(Start);
+	if ((End = regex2nfa(regex, Start)) != nullptr) {
 		cout << "NFA has built successfully!" << endl;
 	} else {
 		cout << "NFA built failed, please check if the regular expression is right!" << endl;
 	}		
 }
 
-State *Nfa::regex2nfa(char *regex) 
+State *Nfa::regex2nfa(char *regex, State *Start) 
 {
 	char *p;
 	Edge *out;
-	State *start, *s, *root;
+	State *s;
 
 	if (regex == NULL)
 		return NULL;
-	
-	start = new State(false, nullptr, nullptr);
-	stateStack->push(start);
+		
 	for (p = regex; *p; p++) {
 		switch (*p) {
-		default:
-			out = new Edge(stateStack->top, nullptr, *p);
-			s = new State(false, out, nullptr);
-			patch(out, s);
-			patch(stateStack->top, out);
-			stateStack->push(s);
-			edgeStack->push(out);
-			break;
 		case '.':	/* any */
 			out = new Edge(stateStack->top, nullptr, *p);
 			s = new State(false, out, nullptr);
@@ -46,12 +38,17 @@ State *Nfa::regex2nfa(char *regex)
 			break;
 		case '|':	/* alternate */
 			p++;
-			out = new Edge(root, nullptr, *p);
+			State *current = stateStack->top;
+			out = new Edge(Start, nullptr, NULL);
 			s = new State(false, out, nullptr);
 			patch(out, s);
-			patch(root, out);
+			patch(Start, out);
 			stateStack->push(s);
 			edgeStack->push(out);
+			s = regex2nfa(p, s);
+			out = new Edge(current, s, NULL);
+			patch(out, s);
+			patch(current, out);
 			break;
 		case '?':	/* zero or one */
 			out = new Edge(edgeStack->top->start, stateStack->top, NULL);			
@@ -78,27 +75,33 @@ State *Nfa::regex2nfa(char *regex)
 			stateStack->push(s);
 			edgeStack->push(out);
 			break;
+		case 'ги':
+			p++;
+			s = regex2nfa(p, stateStack->top);
+			stateStack->push(s);
+			break;
+		case ')':
+			return stateStack->top;
 		case '[':
+			p++;
+			out = new Edge(stateStack->top, nullptr, *p);
+			s = group(p);
+			patch(out, s);
+			patch(stateStack->top, out);
+			stateStack->push(s);
+			edgeStack->push(out);
+			break;
+		default:
+			out = new Edge(stateStack->top, nullptr, *p);
+			s = new State(false, out, nullptr);
+			patch(out, s);
+			patch(stateStack->top, out);
+			stateStack->push(s);
+			edgeStack->push(out);
+			break;
 		}
 	}
-	return start;
-}
-
-int match(char *file)
-{	
-	ifstream in("file");
-	while
-	int i, c;
-	List *clist, *nlist, *t;
-
-	clist = startlist(start, &l1);
-	nlist = &l2;
-	for (; *s; s++) {
-		c = *s & 0xFF;
-		step(clist, c, nlist);
-		t = clist; clist = nlist; nlist = t;	/* swap clist, nlist */
-	}
-	return ismatch(clist);
+	return s;
 }
 
 void patch(Edge *e, State *s) {
@@ -109,4 +112,35 @@ void patch(Edge *e, State *s) {
 void patch(State *s, Edge *e) {
 	s->OutEdges.push_back(e);
 	e->start = s;
+}
+
+State *Nfa::group(char *p) {
+	for (p; *p; p++) {
+		switch (*p) {
+ 		case ']':
+
+			return stateStack->top;
+		default:
+			
+			break;
+		}
+	}
+}
+
+
+int match(char *file)
+{
+	ifstream in("file");
+	while
+		int i, c;
+	List *clist, *nlist, *t;
+
+	clist = startlist(start, &l1);
+	nlist = &l2;
+	for (; *s; s++) {
+		c = *s & 0xFF;
+		step(clist, c, nlist);
+		t = clist; clist = nlist; nlist = t;	/* swap clist, nlist */
+	}
+	return ismatch(clist);
 }
