@@ -1,17 +1,18 @@
 #include "Edge.h"
 
-Edge::Edge(State *start, State *end, char character)
+Edge::Edge(State *start, State *end, int type, bool exclude= NEXCLUDED)
 {
 	this->start = start;
 	this->end = end;
-	this->character = character;
+	this->type = type;
+	this->exclude = exclude;
 }
 
 bool Edge::match(char c) {
-	if (this->character = '.') return true;
+	if (this->type = '.') return true;
 }
 
 State* Edge::stepNext() {
-	if (this->character = '.') return this->start;
+	if (this->type = '.') return this->start;
 
 }

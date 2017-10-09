@@ -84,7 +84,28 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			return s;
 		case '[':
 			p++;			
-			if((s = group(p)) == nullptr) return nullptr;
+			if((s = group(p, stateStack->top)) == nullptr) return nullptr;
+			stateStack->push(s);
+			break;
+		case '^':
+			p++;
+			out = new Edge(stateStack->top, nullptr, *p, EXCLUDED);
+			s = new State(false, out, nullptr);
+			patch(out, s);
+			patch(stateStack->top, out);
+			stateStack->push(s);
+			edgeStack->push(out);
+			break;
+		case '\\':
+			p++;
+			if ((s = preDefine(p, stateStack->top)) == nullptr) return nullptr;
+			stateStack->push(s);
+			break;
+		case '\t':
+		case '\n':
+		case '\f':
+		case '\r':
+		case '\x0B':
 			break;
 		default:
 			out = new Edge(stateStack->top, nullptr, *p);
@@ -109,8 +130,13 @@ void patch(State *s, Edge *e) {
 	e->start = s;
 }
 
-State *Nfa::group(char *p) {
+State *Nfa::group(char *p, State *top) {
 	Edge *out;
+	State *s = new State(false, nullptr, nullptr);
+
+	bool ifexclude = NEXCLUDED;
+	if (*p == '^') ifexclude = EXCLUDED;
+
 	for (p; *p!=']'; p++) {
 		switch (*p) {
 		case '0':
@@ -123,27 +149,74 @@ State *Nfa::group(char *p) {
 			}
 			break;
 		case '9':
-			out = new Edge(stateStack->top, nullptr, NUM);
+			out = new Edge(stateStack->top, nullptr, NUM, ifexclude);
 			break;
 		case 'z':
-			out = new Edge(stateStack->top, nullptr, LCASES);
+			out = new Edge(stateStack->top, nullptr, LCASES, ifexclude);
 			break;
 		case 'Z':
-			out = new Edge(stateStack->top, nullptr, UCASES);
+			out = new Edge(stateStack->top, nullptr, UCASES, ifexclude);
+			break;
+		default:
+			cout << "NFA built failed, please check if the regular expression is right!" << endl;
+			return	nullptr;
+		}		
+		patch(out, s);
+		patch(top, out);		
+		edgeStack->push(out);
+	}
+	return s;
+}
+
+State *Nfa::preDefine(char *p, State *top) {
+	Edge *out;
+	State *s = new State(false, nullptr, nullptr);
+	for (p; *p != ']'; p++) {
+		switch (*p) {
+		case 'd':
+			out = new Edge(stateStack->top, nullptr, NUM);
+			break;
+		case 'D':
+			out = new Edge(stateStack->top, nullptr, NUM, EXCLUDED);
+			break;
+		case 's':
+			out = new Edge(stateStack->top, nullptr, WS);
+			break;
+		case 'S':
+			out = new Edge(stateStack->top, nullptr, WS, EXCLUDED);
+			break;
+		case 'w':
+			out = new Edge(stateStack->top, nullptr, NUM);
+			Edge *out2 = new Edge(stateStack->top, nullptr, UCASES);
+			Edge *out3 = new Edge(stateStack->top, nullptr, LCASES);
+			patch(out2, s);
+			patch(top, out2);
+			patch(out3, s);
+			patch(top, out3);
+			edgeStack->push(out2);
+			edgeStack->push(out3);
+			break;
+		case 'W':
+			out = new Edge(stateStack->top, nullptr, NUM, EXCLUDED);
+			Edge *out2 = new Edge(stateStack->top, nullptr, UCASES, EXCLUDED);
+			Edge *out3 = new Edge(stateStack->top, nullptr, LCASES, EXCLUDED);
+			patch(out2, s);
+			patch(top, out2);
+			patch(out3, s);
+			patch(top, out3);
+			edgeStack->push(out2);
+			edgeStack->push(out3);
 			break;
 		default:
 			cout << "NFA built failed, please check if the regular expression is right!" << endl;
 			return	nullptr;
 		}
-		State *s = new State(false, out, nullptr);
 		patch(out, s);
-		patch(stateStack->top, out);
-		stateStack->push(s);
+		patch(top, out);
 		edgeStack->push(out);
 	}
-	return stateStack->top;
+	return s;
 }
-
 
 int match(char *file)
 {

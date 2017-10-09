@@ -17,7 +17,8 @@ private:
 	State *Start;
 	State *End;
 	State *regex2nfa(char *regex, State *s);
-	State *group(char *p);
+	State *group(char *p, State *top);
+	State *preDefine(char *p, State *top);
 };
 
 
