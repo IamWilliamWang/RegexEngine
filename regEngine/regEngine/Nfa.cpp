@@ -22,52 +22,48 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 	char *p;
 	Edge *out;
 	State *currentEnd, *currentStart;
-	currentStart = Start;
 
 	if (regex == NULL)
 		return NULL;
 		
 	for (p = regex; *p; p++) {
+		currentEnd = stateList->back;
 		switch (*p) {
 		case '.':	/* any */
-			out = new Edge(stateList->back, nullptr, ANY);
+			currentStart = currentEnd;
+			out = new Edge(currentStart, nullptr, ANY);
+			patch(currentStart, out);
 			currentEnd = new State(false, out, nullptr);
-			patch(out, currentEnd);
-			patch(currentEnd, out);
+			patch(out, currentEnd);			
 			stateList->push_back(currentEnd);
 			edgeList->push_back(out);
 			break;
-		case '|':	/* alternate */
+		case '|':	// alternate 
 			p++;
-			currentEnd = stateList->back;
-			State *alternate = regex2nfa(p, currentStart);
+			currentStart = Start;
+			State *alternate = regex2nfa(p, Start);
 			currentEnd->merge(alternate);
-			stateList->pop_back();
+			stateList->remove(alternate);
 			break;
-		case '?':	/* zero or one */
-			out = new Edge(edgeList->back->start, stateList->back, EPSILON);
-			patch(out, stateList->back);
-			patch(edgeList->back->start, out);
+		case '?':	// zero or one 
+			out = newEdge(currentStart, currentEnd, EPSILON);
 			edgeList->push_back(out);
 			break;
-		case '*':	/* zero or more */
-			out = new Edge(edgeList->back->start, edgeList->back->start, edgeList->top->character);
-			edgeList->back->character = EPSILON;
-			
-			patch(out, edgeList->back->start);
-			patch(edgeList->back->start, out);
+		case '*':	// zero or more 
+			if (currentEnd != currentStart + 1) //for case of group
+			{
+				out = newEdge(currentEnd, currentStart, EPSILON);
+				edgeList->push_back(out);
+				out = newEdge(currentStart, currentEnd, EPSILON);
+				edgeList->push_back(out);
+			}
+			out = newEdge(currentStart, currentStart, edgeList->back->character);		
+			edgeList->pop_back();
+			stateList->remove(currentEnd);
 			edgeList->push_back(out);
 			break;
 		case '+':	/* one or more */
-			out = new Edge(stateList->back, stateList->back, edgeList->back->character);			
-			patch(out, stateList->back);
-			patch(stateList->back, out);
-			edgeList->push_back(out);
-			out = new Edge(stateList->back, nullptr, EPSILON);
-			s = new State(false, out, nullptr);
-			patch(out, currentEnd);
-			patch(stateList->back, out);
-			stateList->push_back(currentEnd);
+			out = newEdge(currentEnd, currentStart, EPSILON);			
 			edgeList->push_back(out);
 			break;
 		case 'ги':
@@ -76,7 +72,7 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			stateList->push_back(currentEnd);
 			break;
 		case ')':
-			return s;
+			return currentEnd;
 		case '[':
 			p++;			
 			if((currentEnd = group(p, stateList->back)) == nullptr) return nullptr;
@@ -230,4 +226,13 @@ State *Nfa::preDefine(char *p, State *top) {
 	return ismatch(clist);
 }
 */
+
+Edge *Nfa::newEdge(State * start, State * end, int type, bool exclude = NEXCLUDED) {
+	Edge *out = new Edge(start, end, type, exclude);
+	patch(out, end);
+	patch(start, out);
+	return out;
+}
+
+State N
  
