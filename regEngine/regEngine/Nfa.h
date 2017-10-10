@@ -21,7 +21,7 @@ private:
 	State *group(char *p, State *top);
 	State *preDefine(char *p, State *top);
 	Edge * newEdge(State * start, State * end, int type, bool exclude = NEXCLUDED);
-	int match();
+	char *match(char *file);
 };
 
 

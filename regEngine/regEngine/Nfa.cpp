@@ -1,5 +1,6 @@
 #include "Nfa.h"
 #include <iostream>
+#include <fstream>
 #include <stack>
 #include "State.h"
 #include "Edge.h"
@@ -17,7 +18,7 @@ Nfa::Nfa(char *regex)
 	}		
 }
 
-State *Nfa::regex2nfa(char *regex, State *Start) 
+State *Nfa::regex2nfa(char *regex, State *Start)
 {
 	char *p;
 	Edge *out;
@@ -102,17 +103,20 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 	return currentEnd;
 }
 
-void patch(Edge *e, State *s) {
+void patch(Edge *e, State *s)
+{
 	e->end = s;
 	s->InEdges.push_back(e);
 }
 
-void patch(State *s, Edge *e) {
+void patch(State *s, Edge *e)
+{
 	s->OutEdges.push_back(e);
 	e->start = s;
 }
 
-State *Nfa::group(char *p, State *top) {
+State *Nfa::group(char *p, State *top)
+{
 	Edge *out;
 	State *s = new State();
 
@@ -147,7 +151,8 @@ State *Nfa::group(char *p, State *top) {
 	return s;
 }
 
-State *Nfa::preDefine(char *p, State *top) {
+State *Nfa::preDefine(char *p, State *top)
+{
 	Edge *out;
 	State *s = new State();
 	for (p; *p != ']'; p++) {
@@ -182,25 +187,8 @@ State *Nfa::preDefine(char *p, State *top) {
 	return s;
 }
 
-/**int match(char *file)
+Edge *Nfa::newEdge(State * start, State * end, int type, bool exclude = NEXCLUDED)
 {
-	ifstream in("file");
-	while
-		int i, c;
-	List *clist, *nlist, *t;
-
-	clist = startlist(start, &l1);
-	nlist = &l2;
-	for (; *s; s++) {
-		c = *s & 0xFF;
-		step(clist, c, nlist);
-		t = clist; clist = nlist; nlist = t;	// swap clist, nlist
-	}
-	return ismatch(clist);
-}
-*/
-
-Edge *Nfa::newEdge(State * start, State * end, int type, bool exclude = NEXCLUDED) {
 	Edge *out = new Edge(start, end, type, exclude);
 	patch(out, end);
 	patch(start, out);
@@ -208,5 +196,20 @@ Edge *Nfa::newEdge(State * start, State * end, int type, bool exclude = NEXCLUDE
 	return out;
 }
 
+char *Nfa::match(char *file)
+{
+	FILE *fp;
+	if (!(fp = fopen(file, "r"))){
+		cout << "File: " << *file << " failed, try again." << endl;
+	}
+	
+	State *current = this->Start;
+	char  *p;
+	while ( (p = fgets(p, 2, fp))!=NULL) {
+		match(current, p);
+	}
 
+	fclose(fp);
+	return ismatch(clist);
+}
  
