@@ -1,10 +1,15 @@
 #include "State.h"
 
-State::State(bool FinalStatus, Edge* InEdge, Edge* OutEdge)
+State::State(Edge* InEdge, Edge*OutEdge, Status status = READY)
 {
-	this->FinalStatus = false;
+	this->status = status;
 	this->InEdges.push_back(InEdge);
 	this->OutEdges.push_back(OutEdge);
+}
+
+State::State()
+{
+	this->status = READY;
 }
 
 void State::merge(State *s) {

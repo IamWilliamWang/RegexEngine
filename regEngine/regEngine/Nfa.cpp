@@ -8,7 +8,7 @@ using namespace std;
 
 Nfa::Nfa(char *regex)
 {	
-	Start = new State(false, nullptr, nullptr);
+	Start = new State();
 	stateList->push_back(Start);
 	if ((End = regex2nfa(regex, Start)) != nullptr) {
 		cout << "NFA has built successfully!" << endl;
@@ -31,12 +31,9 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 		switch (*p) {
 		case '.':	/* any */
 			currentStart = currentEnd;
-			out = new Edge(currentStart, nullptr, ANY);
-			patch(currentStart, out);
-			currentEnd = new State(false, out, nullptr);
-			patch(out, currentEnd);			
+			currentEnd = new State();
+			out = newEdge(currentStart, currentEnd, ANY);		
 			stateList->push_back(currentEnd);
-			edgeList->push_back(out);
 			break;
 		case '|':	// alternate 
 			p++;
@@ -47,20 +44,17 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			break;
 		case '?':	// zero or one 
 			out = newEdge(currentStart, currentEnd, EPSILON);
-			edgeList->push_back(out);
 			break;
 		case '*':	// zero or more 
 			if (currentEnd != currentStart + 1) //for case of group
 			{
 				out = newEdge(currentEnd, currentStart, EPSILON);
-				edgeList->push_back(out);
 				out = newEdge(currentStart, currentEnd, EPSILON);
-				edgeList->push_back(out);
 			}
-			out = newEdge(currentStart, currentStart, edgeList->back->character);		
 			edgeList->pop_back();
-			stateList->remove(currentEnd);
-			edgeList->push_back(out);
+			out = newEdge(currentStart, currentStart, edgeList->back->character);
+			stateList->pop_back();
+			currentEnd = stateList->back;
 			break;
 		case '+':	/* one or more */
 			out = newEdge(currentEnd, currentStart, EPSILON);			
@@ -68,27 +62,26 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			break;
 		case 'ги':
 			p++;
+			currentStart = Start;
 			currentEnd = regex2nfa(p, stateList->back);
-			stateList->push_back(currentEnd);
 			break;
 		case ')':
 			return currentEnd;
 		case '[':
-			p++;			
+			p++;		
+			currentStart = Start;
 			if((currentEnd = group(p, stateList->back)) == nullptr) return nullptr;
 			stateList->push_back(currentEnd);
 			break;
 		case '^':
 			p++;
-			out = new Edge(stateList->back, nullptr, *p, EXCLUDED);
-			currentEnd = new State(false, out, nullptr);
-			patch(out, currentEnd);
-			patch(stateList->back, out);
+			currentEnd = new State();
+			out = newEdge(stateList->back, currentEnd, *p, EXCLUDED);
 			stateList->push_back(currentEnd);
-			edgeList->push_back(out);
 			break;
 		case '\\':
 			p++;
+			currentStart = Start;
 			if ((currentEnd = preDefine(p, stateList->back)) == nullptr) return nullptr;
 			stateList->push_back(currentEnd);
 			break;
@@ -99,12 +92,10 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 		case '\x0B':
 			break;
 		default:
-			out = new Edge(stateList->back, nullptr, *p);
-			currentEnd = new State(false, out, nullptr);
-			patch(out, currentEnd);
-			patch(stateList->back, out);
+			currentStart = currentEnd;
+			currentEnd = new State();
+			out = newEdge(stateList->back, currentEnd, *p);
 			stateList->push_back(currentEnd);
-			edgeList->push_back(out);
 			break;
 		}
 	}
@@ -123,7 +114,7 @@ void patch(State *s, Edge *e) {
 
 State *Nfa::group(char *p, State *top) {
 	Edge *out;
-	State *s = new State(false, nullptr, nullptr);
+	State *s = new State();
 
 	bool ifexclude = NEXCLUDED;
 	if (*p == '^') ifexclude = EXCLUDED;
@@ -140,71 +131,53 @@ State *Nfa::group(char *p, State *top) {
 			}
 			break;
 		case '9':
-			out = new Edge(stateList->back, nullptr, NUM, ifexclude);
+			out = newEdge(top, s, NUM, ifexclude);
 			break;
 		case 'z':
-			out = new Edge(stateList->back, nullptr, LCASES, ifexclude);
+			out = newEdge(top, s, LCASES, ifexclude);
 			break;
 		case 'Z':
-			out = new Edge(stateList->back, nullptr, UCASES, ifexclude);
+			out = newEdge(top, s, UCASES, ifexclude);
 			break;
 		default:
 			cout << "NFA built failed, please check if the regular expression is right!" << endl;
 			return	nullptr;
 		}		
-		patch(out, s);
-		patch(top, out);		
-		edgeList->push_back(out);
 	}
 	return s;
 }
 
 State *Nfa::preDefine(char *p, State *top) {
 	Edge *out;
-	State *s = new State(false, nullptr, nullptr);
+	State *s = new State();
 	for (p; *p != ']'; p++) {
 		switch (*p) {
 		case 'd':
-			out = new Edge(stateList->back, nullptr, NUM);
+			out = newEdge(top, s, NUM);
 			break;
 		case 'D':
-			out = new Edge(stateList->back, nullptr, NUM, EXCLUDED);
+			out = newEdge(top, s, NUM, EXCLUDED);
 			break;
 		case 's':
-			out = new Edge(stateList->back, nullptr, WS);
+			out = newEdge(top, s, WS);
 			break;
 		case 'S':
-			out = new Edge(stateList->back, nullptr, WS, EXCLUDED);
+			out = newEdge(top, s, WS, EXCLUDED);
 			break;
 		case 'w':
-			out = new Edge(stateList->back, nullptr, NUM);
-			Edge *out2 = new Edge(stateList->back, nullptr, UCASES);
-			Edge *out3 = new Edge(stateList->back, nullptr, LCASES);
-			patch(out2, s);
-			patch(top, out2);
-			patch(out3, s);
-			patch(top, out3);
-			edgeList->push_back(out2);
-			edgeList->push_back(out3);
+			out = newEdge(top, s, NUM);
+			Edge *out2 = newEdge(top, s, UCASES);
+			Edge *out3 = newEdge(top, s, LCASES);
 			break;
 		case 'W':
-			out = new Edge(stateList->back, nullptr, NUM, EXCLUDED);
-			Edge *out2 = new Edge(stateList->back, nullptr, UCASES, EXCLUDED);
-			Edge *out3 = new Edge(stateList->back, nullptr, LCASES, EXCLUDED);
-			patch(out2, s);
-			patch(top, out2);
-			patch(out3, s);
-			patch(top, out3);
-			edgeList->push_back(out2);
-			edgeList->push_back(out3);
+			out = newEdge(top, s, NUM, EXCLUDED);
+			Edge *out2 = newEdge(top, s, UCASES, EXCLUDED);
+			Edge *out3 = newEdge(top, s, LCASES, EXCLUDED);
 			break;
 		default:
 			cout << "NFA built failed, please check if the regular expression is right!" << endl;
 			return	nullptr;
-		}
-		patch(out, s);
-		patch(top, out);
-		edgeList->push_back(out);
+		}		
 	}
 	return s;
 }
@@ -231,8 +204,9 @@ Edge *Nfa::newEdge(State * start, State * end, int type, bool exclude = NEXCLUDE
 	Edge *out = new Edge(start, end, type, exclude);
 	patch(out, end);
 	patch(start, out);
+	edgeList->push_back(out);
 	return out;
 }
 
-State N
+
  
