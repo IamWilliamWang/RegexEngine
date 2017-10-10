@@ -12,6 +12,7 @@ public:
 	bool FinalStatus;
 	vector<Edge*> InEdges;
 	vector<Edge*> OutEdges;
+	void merge(State *s);
 };
 
 
