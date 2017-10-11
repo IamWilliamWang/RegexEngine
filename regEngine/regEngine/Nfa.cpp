@@ -196,7 +196,7 @@ Edge *Nfa::newEdge(State * start, State * end, int type, bool exclude = NEXCLUDE
 	return out;
 }
 
-char *Nfa::match(char *file)
+Status Nfa::match(char *file)
 {
 	FILE *fp;
 	if (!(fp = fopen(file, "r"))){
@@ -207,14 +207,27 @@ char *Nfa::match(char *file)
 	current->status = SUCCESS;
 	char  *p;
 	while ( (p = fgets(p, 1024, fp))!= NULL) {
-		while ( step(current, p) == FAIL)
-		{
-			p++;
+		while (( step(current, p) == FAIL))
+		{	
+			if (*p != EOF) {
+				p++;
+				continue;
+			}
+			break;
 		} 
+		if (stateList->end == FAIL)
+		{
+			continue;
+		}
+	    while (!matchedChar.empty())
+		{
+			cout << matchedChar.front;
+			matchedChar.pop();
+		}
+		cout << endl;
 	}
-
 	fclose(fp);
-	return ;
+	return SUCCESS;
 }
  
 Status Nfa::step(State *current, char *c)
@@ -225,9 +238,11 @@ Status Nfa::step(State *current, char *c)
 	{
 		if (temp.back.match(ch)) {
 			temp.back.end->status = SUCCESS;
+			matchedChar.push_back(ch);
 			return step(temp.back.end, ++c);
 		}
 		temp.pop_back();
 	}
+	matchedChar.clear();
 	return FAIL;
 }

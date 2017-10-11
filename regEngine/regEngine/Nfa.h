@@ -3,6 +3,7 @@
 #include <iostream>
 #include "State.h"
 #include<list>
+#include<queue>
 
 using namespace std;
 
@@ -13,7 +14,8 @@ public:
 	//char match(char *file);
 	static list<Edge*> edgeList[500];
 	static list<State*> stateList[500];
-	char *match(char *file);
+	Status match(char *file);
+	static queue<char*> matchedChar;
 
 private:
 	State *Start;
