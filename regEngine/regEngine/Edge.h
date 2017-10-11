@@ -1,21 +1,20 @@
+#pragma once
 #ifndef EDGE_H
 
 #include <vector>
 #include "State.h"
-enum CHARTYPE{ LCASES=256, UCASES=257, NUM=258, EPSILON=259, ANY=260, WS=262 };
-enum IFEXCLUDE{ EXCLUDED = true, NEXCLUDED = false};
+
+enum { NEXCLUDED = 0, EXCLUDED = 1 };
+enum { LCASES=256, UCASES=257, NUM=258, EPSILON=259, ANY=260, WS=262 };
 
 class Edge
 {
 public:
-	Edge(State *start, State *end, int type, IFEXCLUDE exclude = NEXCLUDED);
+	Edge(State*s, State*e, int t, int ex = NEXCLUDED);
 	State *start;
 	State *end;
-	CHARTYPE type;
-	IFEXCLUDE exclude;
-
-	bool match(char c);
-	State *stepNext();
+	int type;
+	int exclude;
 };
 
 #endif // !EDGE_H

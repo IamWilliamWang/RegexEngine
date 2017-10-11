@@ -10,7 +10,7 @@ using namespace std;
 Nfa::Nfa(char *regex)
 {	
 	Start = new State();
-	stateList->push_back(Start);
+	stateList.push_back(Start);
 	if ((End = regex2nfa(regex, Start)) != nullptr) {
 		cout << "NFA has built successfully!" << endl;
 	} else {
@@ -23,68 +23,69 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 	char *p;
 	Edge *out;
 	State *currentEnd, *currentStart;
+	State *alternate;
 
 	if (regex == NULL)
 		return NULL;
 		
 	for (p = regex; *p; p++) {
-		currentEnd = stateList->back;
+		currentEnd = stateList.back();
 		switch (*p) {
 		case '.':	/* any */
 			currentStart = currentEnd;
 			currentEnd = new State();
-			out = newEdge(currentStart, currentEnd, ANY);		
-			stateList->push_back(currentEnd);
+			out = newEdge(currentStart, currentEnd, ANY, NEXCLUDED);		
+			stateList.push_back(currentEnd);
 			break;
 		case '|':	// alternate 
 			p++;
 			currentStart = Start;
-			State *alternate = regex2nfa(p, Start);
+			 alternate= regex2nfa(p, Start);
 			currentEnd->merge(alternate);
-			stateList->remove(alternate);
+			stateList.remove(alternate);
 			break;
 		case '?':	// zero or one 
-			out = newEdge(currentStart, currentEnd, EPSILON);
+			out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
 			break;
 		case '*':	// zero or more 
 			if (currentEnd != currentStart + 1) //for case of group
 			{
-				out = newEdge(currentEnd, currentStart, EPSILON);
-				out = newEdge(currentStart, currentEnd, EPSILON);
+				out = newEdge(currentEnd, currentStart, EPSILON, NEXCLUDED);
+				out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
 			}
-			edgeList->pop_back();
-			out = newEdge(currentStart, currentStart, edgeList->back->character);
-			stateList->pop_back();
-			currentEnd = stateList->back;
+			edgeList.pop_back();
+			out = newEdge(currentStart, currentStart, edgeList.back.character, NEXCLUDED);
+			stateList.pop_back();
+			currentEnd = stateList.back();
 			break;
 		case '+':	/* one or more */
-			out = newEdge(currentEnd, currentStart, EPSILON);			
-			edgeList->push_back(out);
+			out = newEdge(currentEnd, currentStart, EPSILON, NEXCLUDED);
+			edgeList.push_back(out);
 			break;
 		case 'ги':
 			p++;
 			currentStart = Start;
-			currentEnd = regex2nfa(p, stateList->back);
+			currentEnd = regex2nfa(p, stateList.back());
 			break;
 		case ')':
 			return currentEnd;
 		case '[':
 			p++;		
 			currentStart = Start;
-			if((currentEnd = group(p, stateList->back)) == nullptr) return nullptr;
-			stateList->push_back(currentEnd);
+			if((currentEnd = group(p, stateList.back())) == nullptr) return nullptr;
+			stateList.push_back(currentEnd);
 			break;
 		case '^':
 			p++;
 			currentEnd = new State();
-			out = newEdge(stateList->back, currentEnd, *p, EXCLUDED);
-			stateList->push_back(currentEnd);
+			out = newEdge(stateList.back, currentEnd, *p, EXCLUDED);
+			stateList.push_back(currentEnd);
 			break;
 		case '\\':
 			p++;
 			currentStart = Start;
-			if ((currentEnd = preDefine(p, stateList->back)) == nullptr) return nullptr;
-			stateList->push_back(currentEnd);
+			if ((currentEnd = preDefine(p, stateList.back())) == nullptr) return nullptr;
+			stateList.push_back(currentEnd);
 			break;
 		case '\t':
 		case '\n':
@@ -95,8 +96,8 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 		default:
 			currentStart = currentEnd;
 			currentEnd = new State();
-			out = newEdge(stateList->back, currentEnd, *p);
-			stateList->push_back(currentEnd);
+			out = newEdge(stateList.back, currentEnd, *p, NEXCLUDED);
+			stateList.push_back(currentEnd);
 			break;
 		}
 	}
@@ -153,31 +154,31 @@ State *Nfa::group(char *p, State *top)
 
 State *Nfa::preDefine(char *p, State *top)
 {
-	Edge *out;
+	Edge *out, *out2, *out3;
 	State *s = new State();
 	for (p; *p != ']'; p++) {
 		switch (*p) {
 		case 'd':
-			out = newEdge(top, s, NUM);
+			out = newEdge(top, s, NUM, NEXCLUDED);
 			break;
 		case 'D':
 			out = newEdge(top, s, NUM, EXCLUDED);
 			break;
 		case 's':
-			out = newEdge(top, s, WS);
+			out = newEdge(top, s, WS, NEXCLUDED);
 			break;
 		case 'S':
 			out = newEdge(top, s, WS, EXCLUDED);
 			break;
 		case 'w':
-			out = newEdge(top, s, NUM);
-			Edge *out2 = newEdge(top, s, UCASES);
-			Edge *out3 = newEdge(top, s, LCASES);
+			out = newEdge(top, s, NUM, NEXCLUDED);
+			out2 = newEdge(top, s, UCASES, NEXCLUDED);
+			out3 = newEdge(top, s, LCASES, NEXCLUDED);
 			break;
 		case 'W':
 			out = newEdge(top, s, NUM, EXCLUDED);
-			Edge *out2 = newEdge(top, s, UCASES, EXCLUDED);
-			Edge *out3 = newEdge(top, s, LCASES, EXCLUDED);
+			out2 = newEdge(top, s, UCASES, EXCLUDED);
+			out3 = newEdge(top, s, LCASES, EXCLUDED);
 			break;
 		default:
 			cout << "NFA built failed, please check if the regular expression is right!" << endl;
@@ -187,16 +188,16 @@ State *Nfa::preDefine(char *p, State *top)
 	return s;
 }
 
-Edge *Nfa::newEdge(State * start, State * end, int type, bool exclude = NEXCLUDED)
+Edge *Nfa::newEdge(State * start, State * end, int type, int exclude = NEXCLUDED)
 {
 	Edge *out = new Edge(start, end, type, exclude);
 	patch(out, end);
 	patch(start, out);
-	edgeList->push_back(out);
+	edgeList.push_back(out);
 	return out;
 }
 
-Status Nfa::match(char *file)
+int Nfa::match(char *file)
 {
 	FILE *fp;
 	if (!(fp = fopen(file, "r"))){
@@ -206,6 +207,7 @@ Status Nfa::match(char *file)
 	State *current = this->Start;
 	current->status = SUCCESS;
 	char  *p;
+	State *end = stateList.end();
 	while ( (p = fgets(p, 1024, fp))!= NULL) {
 		while (( step(current, p) == FAIL))
 		{	
@@ -215,13 +217,13 @@ Status Nfa::match(char *file)
 			}
 			break;
 		} 
-		if (stateList->end == FAIL)
+		if ( end->status== FAIL)
 		{
 			continue;
 		}
 	    while (!matchedChar.empty())
 		{
-			cout << matchedChar.front;
+			cout << matchedChar.front();
 			matchedChar.pop();
 		}
 		cout << endl;
@@ -230,19 +232,19 @@ Status Nfa::match(char *file)
 	return SUCCESS;
 }
  
-Status Nfa::step(State *current, char *c)
+int Nfa::step(State *current, char *c)
 {
 	vector<Edge*> temp = current->OutEdges;
 	char *ch = c;
 	while (!temp.empty())
 	{
-		if (temp.back.match(ch)) {
+		if (temp.back->match(ch)) {
 			temp.back.end->status = SUCCESS;
-			matchedChar.push_back(ch);
+			matchedChar.push(ch);
 			return step(temp.back.end, ++c);
 		}
 		temp.pop_back();
 	}
-	matchedChar.clear();
+	matchedChar.push("\n");
 	return FAIL;
 }

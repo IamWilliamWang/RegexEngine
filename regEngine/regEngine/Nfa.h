@@ -1,5 +1,6 @@
+#pragma once
 #ifndef NFA_H
-#define MAXNFA 1024;
+
 #include <iostream>
 #include "State.h"
 #include<list>
@@ -12,10 +13,10 @@ class Nfa
 public:
 	Nfa(char *regex);
 	//char match(char *file);
-	static list<Edge*> edgeList[500];
-	static list<State*> stateList[500];
-	Status match(char *file);
-	static queue<char*> matchedChar;
+	static std::list<Edge *> edgeList;
+	static std::list<State *> stateList;
+	int match(char *file);
+	static std::queue<char*> matchedChar;
 
 private:
 	State *Start;
@@ -23,8 +24,8 @@ private:
 	State *regex2nfa(char *regex, State *s);
 	State *group(char *p, State *top);
 	State *preDefine(char *p, State *top);
-	Edge * newEdge(State * start, State * end, int type, bool exclude = NEXCLUDED);
-	Status step(State *current, char *c);
+	Edge *newEdge(State * start, State * end, int type, int exclude);
+	int step(State *current, char *c);
 };
 
 

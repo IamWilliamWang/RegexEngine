@@ -1,6 +1,6 @@
 #include "State.h"
 
-State::State(Edge* InEdge, Edge*OutEdge, Status status = READY)
+State::State(Edge* InEdge, Edge*OutEdge, int status = READY)
 {
 	this->status = status;
 	this->InEdges.push_back(InEdge);
