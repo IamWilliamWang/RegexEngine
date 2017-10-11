@@ -204,12 +204,30 @@ char *Nfa::match(char *file)
 	}
 	
 	State *current = this->Start;
+	current->status = SUCCESS;
 	char  *p;
-	while ( (p = fgets(p, 2, fp))!=NULL) {
-		match(current, p);
+	while ( (p = fgets(p, 1024, fp))!= NULL) {
+		while ( step(current, p) == FAIL)
+		{
+			p++;
+		} 
 	}
 
 	fclose(fp);
-	return ismatch(clist);
+	return ;
 }
  
+Status Nfa::step(State *current, char *c)
+{
+	vector<Edge*> temp = current->OutEdges;
+	char *ch = c;
+	while (!temp.empty())
+	{
+		if (temp.back.match(ch)) {
+			temp.back.end->status = SUCCESS;
+			return step(temp.back.end, ++c);
+		}
+		temp.pop_back();
+	}
+	return FAIL;
+}

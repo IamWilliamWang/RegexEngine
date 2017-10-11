@@ -13,6 +13,7 @@ public:
 	//char match(char *file);
 	static list<Edge*> edgeList[500];
 	static list<State*> stateList[500];
+	char *match(char *file);
 
 private:
 	State *Start;
@@ -21,7 +22,7 @@ private:
 	State *group(char *p, State *top);
 	State *preDefine(char *p, State *top);
 	Edge * newEdge(State * start, State * end, int type, bool exclude = NEXCLUDED);
-	char *match(char *file);
+	Status step(State *current, char *c);
 };
 
 

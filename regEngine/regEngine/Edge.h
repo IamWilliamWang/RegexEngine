@@ -14,7 +14,6 @@ public:
 	int type;
 	bool exclude;
 
-
 	bool match(char c);
 	State *stepNext();
 };

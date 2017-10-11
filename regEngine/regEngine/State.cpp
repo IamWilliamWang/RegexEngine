@@ -24,3 +24,6 @@ void State::merge(State *s) {
 		s->OutEdges.pop_back();
 	}
 }
+
+
+
