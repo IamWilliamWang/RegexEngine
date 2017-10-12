@@ -40,7 +40,7 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 		case '|':	// alternate 
 			p++;
 			currentStart = Start;
-			 alternate= regex2nfa(p, Start);
+			alternate= regex2nfa(p, Start);
 			currentEnd->merge(alternate);
 			stateList.remove(alternate);
 			break;
@@ -55,7 +55,8 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			}
 			edgeList.pop_back();
 			currentEnd = currentStart;
-			out = newEdge(currentStart, currentEnd, edgeList.back->type, NEXCLUDED);
+			out = edgeList.back();
+			out = newEdge(currentStart, currentEnd, out->type, NEXCLUDED);
 			stateList.pop_back();
 			currentEnd = stateList.back();
 			break;
@@ -201,49 +202,58 @@ Edge *Nfa::newEdge(State * start, State * end, int type, int exclude = NEXCLUDED
 
 int Nfa::match(char *file)
 {
-	FILE *fp;
+	/*FILE *fp;
 	if (!(fp = fopen(file, "r"))){
 		cout << "File: " << *file << " failed, try again." << endl;
 	}
-	
+	*/
 	State *current = this->Start;
 	current->status = SUCCESS;
-	char  *p;
-	State *end = stateList.end();
-	while ( (p = fgets(p, 1024, fp))!= NULL) {
-		while (( step(current, p) == FAIL))
-		{	
-			if (*p != EOF) {
-				p++;
+	ifstream readByChar;
+	char c;
+	readByChar.open(file);
+	if (!readByChar) {
+		cout << "fail to open the file!" << *file << endl;
+		return FAIL;
+	}
+	while (!readByChar.eof())
+	{	
+		readByChar >> c;
+		while ((step(current, &c) == FAIL))
+		{
+			if (c != EOF) {
+				readByChar >> c;
 				continue;
 			}
 			break;
-		} 
-		if ( end->status== FAIL)
+		}
+		if (this->End->status == FAIL)
 		{
 			continue;
 		}
-	    while (!matchedChar.empty())
+		while (!matchedChar.empty())
 		{
 			cout << matchedChar.front();
 			matchedChar.pop();
 		}
 		cout << endl;
 	}
-	fclose(fp);
+	readByChar.close();
 	return SUCCESS;
 }
  
 int Nfa::step(State *current, char *c)
 {
 	vector<Edge*> temp = current->OutEdges;
+	Edge *currentEdge;
 	char *ch = c;
 	while (!temp.empty())
-	{
-		if (temp.back->match(ch)) {
-			temp.back()->end->status = SUCCESS;
+	{	
+		currentEdge = temp.back();
+		if (currentEdge->match(ch)) {
+			currentEdge->end->status = SUCCESS;
 			matchedChar.push(ch);
-			return step(temp.back->end(), ++c);
+			return step(currentEdge->end, ++c);
 		}
 		temp.pop_back();
 	}
