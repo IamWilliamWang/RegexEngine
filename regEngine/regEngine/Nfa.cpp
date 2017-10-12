@@ -210,18 +210,18 @@ int Nfa::match(char *file)
 	State *current = this->Start;
 	current->status = SUCCESS;
 	ifstream readByChar;
-	char c;
-	readByChar.open(file);
-	if (!readByChar) {
-		cout << "fail to open the file!" << *file << endl;
+	char c[1024];
+	readByChar.open(file, ios::in);
+	if (!readByChar.is_open()) {
+		cout << "Failed to open the file: " << file << endl;
 		return FAIL;
 	}
 	while (!readByChar.eof())
 	{	
 		readByChar >> c;
-		while ((step(current, &c) == FAIL))
+		while ((step(current, c) == FAIL))
 		{
-			if (c != EOF) {
+			if (*c != EOF) {
 				readByChar >> c;
 				continue;
 			}
@@ -242,7 +242,7 @@ int Nfa::match(char *file)
 	return SUCCESS;
 }
  
-int Nfa::step(State *current, char *c)
+int Nfa::step(State *current,char *c)
 {
 	vector<Edge*> temp = current->OutEdges;
 	Edge *currentEdge;
@@ -253,7 +253,7 @@ int Nfa::step(State *current, char *c)
 		if (currentEdge->match(ch)) {
 			currentEdge->end->status = SUCCESS;
 			matchedChar.push(ch);
-			return step(currentEdge->end, ++c);
+			return step(currentEdge->end, ++ch);
 		}
 		temp.pop_back();
 	}
