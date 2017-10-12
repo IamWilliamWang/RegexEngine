@@ -1,9 +1,9 @@
-#include "Nfa.h"
 #include <iostream>
 #include <fstream>
 #include <stack>
 #include "State.h"
 #include "Edge.h"
+#include "Nfa.h"
 
 using namespace std;
 
@@ -54,7 +54,8 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 				out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
 			}
 			edgeList.pop_back();
-			out = newEdge(currentStart, currentStart, edgeList.back.character, NEXCLUDED);
+			currentEnd = currentStart;
+			out = newEdge(currentStart, currentEnd, edgeList.back->type, NEXCLUDED);
 			stateList.pop_back();
 			currentEnd = stateList.back();
 			break;
@@ -77,8 +78,9 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			break;
 		case '^':
 			p++;
+			currentStart = currentEnd;
 			currentEnd = new State();
-			out = newEdge(stateList.back, currentEnd, *p, EXCLUDED);
+			out = newEdge(currentStart, currentEnd, *p, EXCLUDED);
 			stateList.push_back(currentEnd);
 			break;
 		case '\\':
@@ -96,7 +98,7 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 		default:
 			currentStart = currentEnd;
 			currentEnd = new State();
-			out = newEdge(stateList.back, currentEnd, *p, NEXCLUDED);
+			out = newEdge(currentStart, currentEnd, *p, NEXCLUDED);
 			stateList.push_back(currentEnd);
 			break;
 		}
@@ -239,9 +241,9 @@ int Nfa::step(State *current, char *c)
 	while (!temp.empty())
 	{
 		if (temp.back->match(ch)) {
-			temp.back.end->status = SUCCESS;
+			temp.back()->end->status = SUCCESS;
 			matchedChar.push(ch);
-			return step(temp.back.end, ++c);
+			return step(temp.back->end(), ++c);
 		}
 		temp.pop_back();
 	}

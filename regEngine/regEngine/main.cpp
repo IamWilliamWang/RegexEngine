@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Nfa.h"
 
+class Nfa;
 
 int main(int argc, char **argv)
 {

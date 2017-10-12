@@ -1,5 +1,6 @@
 #pragma once
 #ifndef NFA_H
+#define NFA_H
 
 #include <iostream>
 #include "State.h"
@@ -11,16 +12,18 @@ using namespace std;
 class Nfa 
 {
 public:
-	Nfa(char *regex);
-	//char match(char *file);
-	static std::list<Edge *> edgeList;
-	static std::list<State *> stateList;
-	int match(char *file);
-	static std::queue<char*> matchedChar;
-
-private:
 	State *Start;
 	State *End;
+	std::list<Edge *> edgeList;
+	std::list<State *> stateList;	
+
+public:
+	Nfa(char *regex);
+	//char match(char *file);
+	int match(char *file);
+	std::queue<char*> matchedChar;
+
+private:
 	State *regex2nfa(char *regex, State *s);
 	State *group(char *p, State *top);
 	State *preDefine(char *p, State *top);
@@ -28,6 +31,5 @@ private:
 	int step(State *current, char *c);
 };
 
-
-#endif NFA_H
+#endif 
 

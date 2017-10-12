@@ -24,10 +24,10 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Edge.h">
+    <ClInclude Include="State.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="State.h">
+    <ClInclude Include="Edge.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -36,9 +36,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Edge.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="State.cpp">
