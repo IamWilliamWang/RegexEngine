@@ -29,7 +29,6 @@ private:
 	State *preDefine(char *p, State *top);
 	Edge *newEdge(State * start, State * end, int type, int exclude);
 	int step(State *current, char *c);
-	char *fileConvert(char *file);
 };
 
 #endif 

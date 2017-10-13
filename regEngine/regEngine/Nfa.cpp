@@ -204,21 +204,29 @@ Edge *Nfa::newEdge(State * start, State * end, int type, int exclude = NEXCLUDED
 int Nfa::match(char *file)
 {
 	
+	FILE *fp;
+	if (!(fp = fopen(file, "r"))) 
+	{
+		cout << "File: " << *file << " open failed, try again." << endl;
+		return NULL;
+	}
+
+	char result[MAX_SIZE] = { '\0' };
+	int cnt = 0;
+	for (; !feof(fp); cnt++)
+		result[cnt] = fgetc(fp);
 
 	State *current = this->Start;
 	current->status = SUCCESS;
-	//ifstream readByChar;
+	char *p = result;
 	
-	//readByChar.open(file, ios::in);
-	
-	while (!feof(fp))
+	while (*p!=EOF)
 	{	
-		char result = fread(buffer, 1, lSize, fp);
-		while ((step(current, &result) == FAIL))
+		while ((step(current, p) == FAIL))
 		{
-			if (result != EOF) {
-				//readByChar >> c;
-				result++;
+			if (*p != EOF) 
+			{
+				p++;
 				continue;
 			}
 			break;
@@ -232,10 +240,9 @@ int Nfa::match(char *file)
 			cout << matchedChar.front();
 			matchedChar.pop();
 		}
-		cout << endl;
 	}
+
 	fclose(fp);
-	//readByChar.close();
 	return SUCCESS;
 }
  
@@ -243,33 +250,25 @@ int Nfa::step(State *current,char *c)
 {
 	vector<Edge*> temp = current->OutEdges;
 	Edge *currentEdge;
-	char *ch = c;
+
+	if (*c == EOF) 
+	{
+		matchedChar.push("\n");
+		return SUCCESS;
+	}
+
 	while (!temp.empty())
 	{	
 		currentEdge = temp.back();
-		if (currentEdge->match(ch)) {
+		if (currentEdge->match(c)) 
+		{
 			currentEdge->end->status = SUCCESS;
-			matchedChar.push(ch);
-			return step(currentEdge->end, ++ch);
+			matchedChar.push(c);
+			return step(currentEdge->end, ++c);
 		}
 		temp.pop_back();
 	}
-	matchedChar.push("\n");
+	
 	return FAIL;
 }
 
-char *Nfa::fileConvert(char *file) {
-	FILE *fp;
-	if (!(fp = fopen(file, "r"))) {
-		cout << "File: " << *file << " failed, try again." << endl;
-	}
-	long lSize = ftell(fp);
-	rewind(fp);
-	char buffer[MAX_SIZE];
-	if (!fp) {
-		cout << "Failed to open the file: " << file << endl;
-		return NULL;
-	}
-	char *result = fgetc(buffer, 1, lSize, fp);
-	return result;
-}
