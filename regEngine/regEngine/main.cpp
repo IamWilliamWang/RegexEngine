@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 
 	for (int i = 2; i < argc; i++)
 		if (nfa->match(argv[i]) == SUCCESS)
-			cout << "Found Matched strings!" << endl;
+			cout << "Finished finding matched strings!" << endl;
 
 	return 0;
 }

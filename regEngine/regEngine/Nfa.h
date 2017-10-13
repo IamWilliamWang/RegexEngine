@@ -16,12 +16,13 @@ public:
 	State *Start;
 	State *End;
 	std::list<Edge *> edgeList;
-	std::list<State *> stateList;	
+	std::list<State *> stateList;
+	std::queue<char> matchedChar;
 
 public:
 	Nfa(char *reg);
 	int match(char *file);
-	std::queue<char> matchedChar;
+
 
 private:
 	State *regex2nfa(char *regex, State *s);

@@ -20,7 +20,7 @@ Nfa::Nfa(char *reg)
 	}		
 }
 
-State *Nfa::regex2nfa(char *regex, State *Start)
+State *Nfa::regex2nfa(char *regex, State *start)
 {
 	char *p;
 	Edge *out;
@@ -30,8 +30,8 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 	if (regex == NULL)
 		return NULL;
 		
+	currentEnd = start;
 	for (p = regex; *p; p++) {
-		currentEnd = stateList.back();
 		switch (*p) {
 		case '.':	/* any */
 			currentStart = currentEnd;
@@ -41,8 +41,8 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			break;
 		case '|':	// alternate 
 			p++;
-			currentStart = Start;
-			alternate= regex2nfa(p, Start);
+			currentStart = start;
+			alternate= regex2nfa(p, start);
 			currentEnd->merge(alternate);
 			stateList.remove(alternate);
 			break;
@@ -68,14 +68,14 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			break;
 		case 'ги':
 			p++;
-			currentStart = Start;
+			currentStart = start;
 			currentEnd = regex2nfa(p, stateList.back());
 			break;
 		case ')':
 			return currentEnd;
 		case '[':
 			p++;		
-			currentStart = Start;
+			currentStart = start;
 			if((currentEnd = group(p, stateList.back())) == nullptr) return nullptr;
 			stateList.push_back(currentEnd);
 			break;
@@ -88,7 +88,7 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			break;
 		case '\\':
 			p++;
-			currentStart = Start;
+			currentStart = start;
 			if ((currentEnd = preDefine(p, stateList.back())) == nullptr) return nullptr;
 			stateList.push_back(currentEnd);
 			break;
@@ -105,20 +105,9 @@ State *Nfa::regex2nfa(char *regex, State *Start)
 			stateList.push_back(currentEnd);
 			break;
 		}
+		currentEnd = stateList.back();
 	}
 	return currentEnd;
-}
-
-void patch(Edge *e, State *s)
-{
-	e->end = s;
-	s->InEdges.push_back(e);
-}
-
-void patch(State *s, Edge *e)
-{
-	s->OutEdges.push_back(e);
-	e->start = s;
 }
 
 State *Nfa::group(char *p, State *top)
@@ -196,8 +185,8 @@ State *Nfa::preDefine(char *p, State *top)
 Edge *Nfa::newEdge(State * start, State * end, int type, int exclude = NEXCLUDED)
 {
 	Edge *out = new Edge(start, end, type, exclude);
-	patch(out, end);
-	patch(start, out);
+	end->patch(out, end);
+	start->patch(start, out);
 	edgeList.push_back(out);
 	return out;
 }
