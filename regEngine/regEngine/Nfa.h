@@ -12,16 +12,16 @@ using namespace std;
 class Nfa 
 {
 public:
+	char *regex;
 	State *Start;
 	State *End;
 	std::list<Edge *> edgeList;
 	std::list<State *> stateList;	
 
 public:
-	Nfa(char *regex);
-	//char match(char *file);
+	Nfa(char *reg);
 	int match(char *file);
-	std::queue<char*> matchedChar;
+	std::queue<char> matchedChar;
 
 private:
 	State *regex2nfa(char *regex, State *s);
@@ -29,6 +29,7 @@ private:
 	State *preDefine(char *p, State *top);
 	Edge *newEdge(State * start, State * end, int type, int exclude);
 	int step(State *current, char *c);
+	void refresh();
 };
 
 #endif 

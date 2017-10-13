@@ -8,8 +8,9 @@
 
 using namespace std;
 
-Nfa::Nfa(char *regex)
+Nfa::Nfa(char *reg)
 {	
+	this->regex = reg;
 	Start = new State();
 	stateList.push_back(Start);
 	if ((End = regex2nfa(regex, Start)) != nullptr) {
@@ -210,39 +211,46 @@ int Nfa::match(char *file)
 		cout << "File: " << *file << " open failed, try again." << endl;
 		return NULL;
 	}
-
 	char result[MAX_SIZE] = { '\0' };
 	int cnt = 0;
-	for (; !feof(fp); cnt++)
-		result[cnt] = fgetc(fp);
+	for (; !feof(fp); cnt++) {
+		char c = fgetc(fp);
+		switch (c) {
+		case '\t':
+		case '\n':
+		case '\f':
+		case '\r':
+		case '\x0B':
+			cnt--;
+			break;
+		default:
+			result[cnt] = c;
+			break;
+		}	
+	}
+	fclose(fp);
 
 	State *current = this->Start;
 	current->status = SUCCESS;
 	char *p = result;
 	
-	while (*p!=EOF)
-	{	
-		while ((step(current, p) == FAIL))
+	while (*p != EOF)
+	{
+		if ((step(current, p) == FAIL))
 		{
-			if (*p != EOF) 
-			{
-				p++;
-				continue;
-			}
-			break;
-		}
-		if (this->End->status == FAIL)
-		{
+			p++;
 			continue;
 		}
+		cout << "Matced characters: ";
 		while (!matchedChar.empty())
 		{
 			cout << matchedChar.front();
 			matchedChar.pop();
 		}
-	}
-
-	fclose(fp);
+		cout << endl;
+		refresh();
+		p++;
+	}	
 	return SUCCESS;
 }
  
@@ -251,11 +259,8 @@ int Nfa::step(State *current,char *c)
 	vector<Edge*> temp = current->OutEdges;
 	Edge *currentEdge;
 
-	if (*c == EOF) 
-	{
-		matchedChar.push("\n");
+	if (End->status == SUCCESS) 
 		return SUCCESS;
-	}
 
 	while (!temp.empty())
 	{	
@@ -263,12 +268,25 @@ int Nfa::step(State *current,char *c)
 		if (currentEdge->match(c)) 
 		{
 			currentEdge->end->status = SUCCESS;
-			matchedChar.push(c);
+			matchedChar.push(*c);
 			return step(currentEdge->end, ++c);
 		}
 		temp.pop_back();
 	}
 	
 	return FAIL;
+}
+
+void Nfa::refresh() {  
+	list<State*>::iterator itor;   
+	itor = stateList.begin();
+	State* current = *itor;
+	itor++;
+	while (itor != stateList.end())
+	{
+		(*itor)->status = FAIL;
+		itor++;
+	}
+
 }
 
