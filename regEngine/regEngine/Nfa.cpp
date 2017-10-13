@@ -4,6 +4,7 @@
 #include "State.h"
 #include "Edge.h"
 #include "Nfa.h"
+#define MAX_SIZE 512
 
 using namespace std;
 
@@ -202,27 +203,22 @@ Edge *Nfa::newEdge(State * start, State * end, int type, int exclude = NEXCLUDED
 
 int Nfa::match(char *file)
 {
-	/*FILE *fp;
-	if (!(fp = fopen(file, "r"))){
-		cout << "File: " << *file << " failed, try again." << endl;
-	}
-	*/
+	
+
 	State *current = this->Start;
 	current->status = SUCCESS;
-	ifstream readByChar;
-	char c[1024];
-	readByChar.open(file, ios::in);
-	if (!readByChar.is_open()) {
-		cout << "Failed to open the file: " << file << endl;
-		return FAIL;
-	}
-	while (!readByChar.eof())
+	//ifstream readByChar;
+	
+	//readByChar.open(file, ios::in);
+	
+	while (!feof(fp))
 	{	
-		readByChar >> c;
-		while ((step(current, c) == FAIL))
+		char result = fread(buffer, 1, lSize, fp);
+		while ((step(current, &result) == FAIL))
 		{
-			if (*c != EOF) {
-				readByChar >> c;
+			if (result != EOF) {
+				//readByChar >> c;
+				result++;
 				continue;
 			}
 			break;
@@ -238,7 +234,8 @@ int Nfa::match(char *file)
 		}
 		cout << endl;
 	}
-	readByChar.close();
+	fclose(fp);
+	//readByChar.close();
 	return SUCCESS;
 }
  
@@ -259,4 +256,20 @@ int Nfa::step(State *current,char *c)
 	}
 	matchedChar.push("\n");
 	return FAIL;
+}
+
+char *Nfa::fileConvert(char *file) {
+	FILE *fp;
+	if (!(fp = fopen(file, "r"))) {
+		cout << "File: " << *file << " failed, try again." << endl;
+	}
+	long lSize = ftell(fp);
+	rewind(fp);
+	char buffer[MAX_SIZE];
+	if (!fp) {
+		cout << "Failed to open the file: " << file << endl;
+		return NULL;
+	}
+	char *result = fgetc(buffer, 1, lSize, fp);
+	return result;
 }
