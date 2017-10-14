@@ -15,13 +15,11 @@ State::State()
 void State::merge(State *s) {
 	while (!s->InEdges.empty())
 	{
-		this->InEdges.push_back(s->InEdges.back());
 		patch(s->InEdges.back(),this);
 		s->InEdges.pop_back();
 	}
 	while (!s->OutEdges.empty())
 	{
-		this->OutEdges.push_back(s->OutEdges.back());
 		patch(this, s->InEdges.back());
 		s->OutEdges.pop_back();
 	}
@@ -35,8 +33,8 @@ void State::patch(Edge *e, State *s)
 
 void State::patch(State *s, Edge *e)
 {
-	s->OutEdges.push_back(e);
 	e->start = s;
+	s->OutEdges.push_back(e);
 }
 
 

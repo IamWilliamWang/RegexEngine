@@ -20,9 +20,9 @@ Nfa::Nfa(char *reg)
 	}		
 }
 
-State *Nfa::regex2nfa(char *regex, State *start)
-{
-	char *p;
+State *Nfa::regex2nfa(char *reg, State *start)
+{	
+	static char *p;
 	Edge *out;
 	State *currentEnd, *currentStart;
 	State *alternate;
@@ -31,7 +31,7 @@ State *Nfa::regex2nfa(char *regex, State *start)
 		return NULL;
 		
 	currentEnd = start;
-	for (p = regex; *p; p++) {
+	for (p = reg; *p; p++) {
 		switch (*p) {
 		case '.':	/* any */
 			currentStart = currentEnd;
@@ -45,6 +45,7 @@ State *Nfa::regex2nfa(char *regex, State *start)
 			alternate= regex2nfa(p, start);
 			currentEnd->merge(alternate);
 			stateList.remove(alternate);
+			p--;
 			break;
 		case '?':	// zero or one 
 			out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
@@ -69,7 +70,7 @@ State *Nfa::regex2nfa(char *regex, State *start)
 		case 'ги':
 			p++;
 			currentStart = start;
-			currentEnd = regex2nfa(p, stateList.back());
+			currentEnd = regex2nfa(p, currentEnd);
 			break;
 		case ')':
 			return currentEnd;
@@ -78,7 +79,7 @@ State *Nfa::regex2nfa(char *regex, State *start)
 			currentStart = start;
 			if((currentEnd = group(p, stateList.back())) == nullptr) return nullptr;
 			stateList.push_back(currentEnd);
-			break;
+			break;	
 		case '^':
 			p++;
 			currentStart = currentEnd;
@@ -105,7 +106,6 @@ State *Nfa::regex2nfa(char *regex, State *start)
 			stateList.push_back(currentEnd);
 			break;
 		}
-		currentEnd = stateList.back();
 	}
 	return currentEnd;
 }
@@ -116,7 +116,10 @@ State *Nfa::group(char *p, State *top)
 	State *s = new State();
 
 	bool ifexclude = NEXCLUDED;
-	if (*p == '^') ifexclude = EXCLUDED;
+	if (*p == '^') {
+		p++;
+		ifexclude = EXCLUDED;
+	}
 
 	for (p; *p!=']'; p++) {
 		switch (*p) {

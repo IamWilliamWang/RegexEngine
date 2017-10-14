@@ -25,8 +25,8 @@ public:
 
 
 private:
-	State *regex2nfa(char *regex, State *s);
-	State *group(char *p, State *top);
+	State *regex2nfa(char *reg, State *s);
+	State *group(char *reg, State *top);
 	State *preDefine(char *p, State *top);
 	Edge *newEdge(State * start, State * end, int type, int exclude);
 	int step(State *current, char *c);
