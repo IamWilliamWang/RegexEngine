@@ -21,7 +21,19 @@ public:
 public:
 	Edge(State *s, State *e, int t, int ex = NEXCLUDED) :start(s), end(e), type(t), exclude(ex) {};
 	bool match(char *p) {
-		if (type == *p) return true;
+		switch (type)
+		{
+		case LCASES:
+		case UCASES:
+		case NUM:
+		case EPSILON:
+		case ANY:
+		case WS:
+		default:
+			if (type == *p) return true;
+		}
+		
+
 		return false;
 	};
 	

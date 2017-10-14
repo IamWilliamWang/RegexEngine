@@ -51,21 +51,20 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
 			break;
 		case '*':	// zero or more 
-			if (currentEnd != currentStart + 1) //for case of group
-			{
-				out = newEdge(currentEnd, currentStart, EPSILON, NEXCLUDED);
-				out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
-			}
-			edgeList.pop_back();
+			//if (currentEnd != currentStart + 1) //for case of group
+			//{
+			out = newEdge(currentEnd, currentStart, EPSILON, NEXCLUDED);
+			out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
+			//}
+			/*edgeList.pop_back();
 			currentEnd = currentStart;
 			out = edgeList.back();
 			out = newEdge(currentStart, currentEnd, out->type, NEXCLUDED);
 			stateList.pop_back();
 			currentEnd = stateList.back();
-			break;
+			break;*/
 		case '+':	/* one or more */
 			out = newEdge(currentEnd, currentStart, EPSILON, NEXCLUDED);
-			edgeList.push_back(out);
 			break;
 		case 'ги':
 			p++;
@@ -257,6 +256,7 @@ int Nfa::step(State *current,char *c)
 	while (!temp.empty())
 	{	
 		currentEdge = temp.back();
+		if(currentEdge->type == EPSILON) return step(currentEdge->end, ++c);
 		if (currentEdge->match(c)) 
 		{
 			currentEdge->end->status = SUCCESS;
