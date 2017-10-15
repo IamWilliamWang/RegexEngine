@@ -18,6 +18,7 @@ public:
 	std::list<Edge *> edgeList;
 	std::list<State *> stateList;
 	std::queue<char> matchedChar;
+	static char *regRead;
 
 public:
 	Nfa(char *reg);
@@ -26,8 +27,8 @@ public:
 
 private:
 	State *regex2nfa(char *reg, State *s);
-	State *group(char *reg, State *top);
-	State *preDefine(char *p, State *top);
+	State *group(State *top);
+	State *preDefine(State *top);
 	Edge *newEdge(State * start, State * end, int type, int exclude);
 	int step(State *current, char *c);
 	void refresh();

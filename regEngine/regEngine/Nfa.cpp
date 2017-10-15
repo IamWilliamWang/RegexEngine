@@ -7,6 +7,7 @@
 #define MAX_SIZE 512
 
 using namespace std;
+char *Nfa::regRead;
 
 Nfa::Nfa(char *reg)
 {	
@@ -22,7 +23,6 @@ Nfa::Nfa(char *reg)
 
 State *Nfa::regex2nfa(char *reg, State *start)
 {	
-	static char *p;
 	Edge *out;
 	State *currentEnd, *currentStart;
 	State *alternate;
@@ -31,8 +31,8 @@ State *Nfa::regex2nfa(char *reg, State *start)
 		return NULL;
 		
 	currentEnd = start;
-	for (p = reg; *p; p++) {
-		switch (*p) {
+	for (regRead = reg; *regRead; regRead++) {
+		switch (*regRead) {
 		case '.':	/* any */
 			currentStart = currentEnd;
 			currentEnd = new State();
@@ -40,56 +40,60 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			stateList.push_back(currentEnd);
 			break;
 		case '|':	// alternate 
-			p++;
+			regRead++;
 			currentStart = start;
-			alternate= regex2nfa(p, start);
+			alternate= regex2nfa(regRead, start);
 			currentEnd->merge(alternate);
 			stateList.remove(alternate);
-			p--;
+			regRead--;
 			break;
 		case '?':	// zero or one 
 			out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
 			break;
 		case '*':	// zero or more 
-			//if (currentEnd != currentStart + 1) //for case of group
-			//{
-			out = newEdge(currentEnd, currentStart, EPSILON, NEXCLUDED);
-			out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
-			//}
+			/*if (currentEnd != currentStart + 1) //for case of group
+			{
+				out = newEdge(currentEnd, currentStart, EPSILON, NEXCLUDED);
+				out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
+			}*/
 			/*edgeList.pop_back();
 			currentEnd = currentStart;
 			out = edgeList.back();
 			out = newEdge(currentStart, currentEnd, out->type, NEXCLUDED);
 			stateList.pop_back();
-			currentEnd = stateList.back();
-			break;*/
+			currentEnd = stateList.back();*/
+			alternate = currentEnd;
+			currentStart->merge(alternate);
+			stateList.remove(alternate);
+			currentEnd = currentStart;
+			break;
 		case '+':	/* one or more */
-			out = newEdge(currentEnd, currentStart, EPSILON, NEXCLUDED);
+			out = newEdge(currentEnd, currentEnd, *regRead, NEXCLUDED);
 			break;
 		case 'ги':
-			p++;
-			currentStart = start;
-			currentEnd = regex2nfa(p, currentEnd);
+			regRead++;
+			currentStart = currentEnd;
+			currentEnd = regex2nfa(regRead, currentEnd);
 			break;
 		case ')':
 			return currentEnd;
 		case '[':
-			p++;		
-			currentStart = start;
-			if((currentEnd = group(p, stateList.back())) == nullptr) return nullptr;
+			regRead++;
+			currentStart = currentEnd;
+			if((currentEnd = group(currentEnd)) == nullptr) return nullptr;
 			stateList.push_back(currentEnd);
 			break;	
 		case '^':
-			p++;
+			regRead++;
 			currentStart = currentEnd;
 			currentEnd = new State();
-			out = newEdge(currentStart, currentEnd, *p, EXCLUDED);
+			out = newEdge(currentStart, currentEnd, *regRead, EXCLUDED);
 			stateList.push_back(currentEnd);
 			break;
 		case '\\':
-			p++;
+			regRead++;
 			currentStart = start;
-			if ((currentEnd = preDefine(p, stateList.back())) == nullptr) return nullptr;
+			if ((currentEnd = preDefine(currentEnd)) == nullptr) return nullptr;
 			stateList.push_back(currentEnd);
 			break;
 		case '\t':
@@ -101,7 +105,7 @@ State *Nfa::regex2nfa(char *reg, State *start)
 		default:
 			currentStart = currentEnd;
 			currentEnd = new State();
-			out = newEdge(currentStart, currentEnd, *p, NEXCLUDED);
+			out = newEdge(currentStart, currentEnd, *regRead, NEXCLUDED);
 			stateList.push_back(currentEnd);
 			break;
 		}
@@ -109,24 +113,24 @@ State *Nfa::regex2nfa(char *reg, State *start)
 	return currentEnd;
 }
 
-State *Nfa::group(char *p, State *top)
+State *Nfa::group(State *top)
 {
 	Edge *out;
 	State *s = new State();
 
 	bool ifexclude = NEXCLUDED;
-	if (*p == '^') {
-		p++;
+	if (*regRead == '^') {
+		regRead++;
 		ifexclude = EXCLUDED;
 	}
 
-	for (p; *p!=']'; p++) {
-		switch (*p) {
+	for (regRead; *regRead !=']'; regRead++) {
+		switch (*regRead) {
 		case '0':
 		case 'a':
 		case 'A':
-			p++;
-			if (*p != '-') {
+			regRead++;
+			if (*regRead != '-') {
 				cout << "NFA built failed, please check if the regular expression is right!" << endl;
 				return	nullptr;
 			}
@@ -148,12 +152,12 @@ State *Nfa::group(char *p, State *top)
 	return s;
 }
 
-State *Nfa::preDefine(char *p, State *top)
+State *Nfa::preDefine(State *top)
 {
 	Edge *out, *out2, *out3;
 	State *s = new State();
-	for (p; *p != ']'; p++) {
-		switch (*p) {
+	for (regRead; *regRead != ']'; regRead++) {
+		switch (*regRead) {
 		case 'd':
 			out = newEdge(top, s, NUM, NEXCLUDED);
 			break;
@@ -230,6 +234,11 @@ int Nfa::match(char *file)
 		if ((step(current, p) == FAIL))
 		{
 			p++;
+			while (!matchedChar.empty())
+			{
+				matchedChar.pop();
+			}
+			refresh();
 			continue;
 		}
 		cout << "Matced characters: ";
@@ -256,12 +265,13 @@ int Nfa::step(State *current,char *c)
 	while (!temp.empty())
 	{	
 		currentEdge = temp.back();
-		if(currentEdge->type == EPSILON) return step(currentEdge->end, ++c);
+		if(currentEdge->type == EPSILON && step(currentEdge->end, c)) return SUCCESS;
 		if (currentEdge->match(c)) 
 		{
 			currentEdge->end->status = SUCCESS;
 			matchedChar.push(*c);
-			return step(currentEdge->end, ++c);
+			if (step(currentEdge->end, ++c))
+				return SUCCESS;
 		}
 		temp.pop_back();
 	}
