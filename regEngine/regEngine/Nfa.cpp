@@ -8,6 +8,7 @@
 
 using namespace std;
 char *Nfa::regRead;
+char *Nfa::fileRead;
 
 Nfa::Nfa(char *reg)
 {	
@@ -226,13 +227,13 @@ int Nfa::match(char *file)
 	fclose(fp);
 
 	this->Start->status = SUCCESS;
-	char *p = result;
+	fileRead = result;
 	
-	while (*p != EOF)
+	while (*fileRead != EOF)
 	{
-		if (step(this->Start, p) == FAIL)
+		if (step(this->Start) == FAIL)
 		{
-			p++;
+			fileRead++;
 			matchedChar.clear();
 			refresh();
 			continue;
@@ -240,12 +241,11 @@ int Nfa::match(char *file)
 		printMatched();
 		refresh();
 		matchedChar.clear();
-		p++;
 	}	
 	return SUCCESS;
 }
  
-int Nfa::step(State *current,char *c)
+int Nfa::step(State *current)
 {
 	vector<Edge*> temp = current->OutEdges;
 	Edge *currentEdge;
@@ -256,20 +256,22 @@ int Nfa::step(State *current,char *c)
 	while (!temp.empty())
 	{	
 		currentEdge = temp.back();
-		if (currentEdge->match(c)) 
+		if (currentEdge->match(fileRead))
 		{
 			currentEdge->end->status = SUCCESS;
-			matchedChar.push_back(*c);
-			if (step(currentEdge->end, ++c)) 
+			matchedChar.push_back(*fileRead);
+			++fileRead;
+			if (step(currentEdge->end))
 			{
 				return SUCCESS;
 			}
 			else
-			{
+			{	
+				--fileRead;
 				matchedChar.pop_back();
 			}
 		}
-		if (currentEdge->type == EPSILON && step(currentEdge->end, c))
+		if (currentEdge->type == EPSILON && step(currentEdge->end))
 			return SUCCESS;
 
 		temp.pop_back();

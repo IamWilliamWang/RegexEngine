@@ -19,6 +19,7 @@ public:
 	std::list<State *> stateList;
 	std::list<char> matchedChar;
 	static char *regRead;
+	static char *fileRead;
 
 public:
 	Nfa(char *reg);
@@ -30,7 +31,7 @@ private:
 	State *group(State *top);
 	State *preDefine(State *top);
 	Edge *newEdge(State * start, State * end, int type, int exclude);
-	int step(State *current, char *c);
+	int step(State *current);
 	void printMatched();
 	void refresh();
 };
