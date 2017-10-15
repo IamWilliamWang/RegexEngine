@@ -1,3 +1,3 @@
-abcdef "D://TestCases//test1.txt"
-abc|def "D://TestCases//test1.txt"
-a*
+.\regEngine abcdef test1.txt
+.\regEngine abc|def test1.txt
+.\regEngine a*b+c?cdef test1.txt
