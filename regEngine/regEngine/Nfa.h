@@ -17,7 +17,7 @@ public:
 	State *End;
 	std::list<Edge *> edgeList;
 	std::list<State *> stateList;
-	std::queue<char> matchedChar;
+	std::list<char> matchedChar;
 	static char *regRead;
 
 public:
@@ -31,6 +31,7 @@ private:
 	State *preDefine(State *top);
 	Edge *newEdge(State * start, State * end, int type, int exclude);
 	int step(State *current, char *c);
+	void printMatched();
 	void refresh();
 };
 

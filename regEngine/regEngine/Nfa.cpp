@@ -68,7 +68,7 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			currentEnd = currentStart;
 			break;
 		case '+':	/* one or more */
-			out = newEdge(currentEnd, currentEnd, *regRead, NEXCLUDED);
+			out = newEdge(currentEnd, currentEnd, edgeList.back()->type, NEXCLUDED);
 			break;
 		case 'ги':
 			regRead++;
@@ -225,30 +225,21 @@ int Nfa::match(char *file)
 	}
 	fclose(fp);
 
-	State *current = this->Start;
-	current->status = SUCCESS;
+	this->Start->status = SUCCESS;
 	char *p = result;
 	
 	while (*p != EOF)
 	{
-		if ((step(current, p) == FAIL))
+		if (step(this->Start, p) == FAIL)
 		{
 			p++;
-			while (!matchedChar.empty())
-			{
-				matchedChar.pop();
-			}
+			matchedChar.clear();
 			refresh();
 			continue;
 		}
-		cout << "Matced characters: ";
-		while (!matchedChar.empty())
-		{
-			cout << matchedChar.front();
-			matchedChar.pop();
-		}
-		cout << endl;
+		printMatched();
 		refresh();
+		matchedChar.clear();
 		p++;
 	}	
 	return SUCCESS;
@@ -265,17 +256,25 @@ int Nfa::step(State *current,char *c)
 	while (!temp.empty())
 	{	
 		currentEdge = temp.back();
-		if(currentEdge->type == EPSILON && step(currentEdge->end, c)) return SUCCESS;
 		if (currentEdge->match(c)) 
 		{
 			currentEdge->end->status = SUCCESS;
-			matchedChar.push(*c);
-			if (step(currentEdge->end, ++c))
+			matchedChar.push_back(*c);
+			if (step(currentEdge->end, ++c)) 
+			{
 				return SUCCESS;
+			}
+			else
+			{
+				matchedChar.pop_back();
+			}
 		}
+		if (currentEdge->type == EPSILON && step(currentEdge->end, c))
+			return SUCCESS;
+
 		temp.pop_back();
 	}
-	
+
 	return FAIL;
 }
 
@@ -290,5 +289,17 @@ void Nfa::refresh() {
 		itor++;
 	}
 
+}
+
+void Nfa::printMatched() {
+	list<char>::iterator itor;
+	itor = matchedChar.begin();
+
+	cout << "Matced characters: ";
+	while (itor != matchedChar.end())
+	{
+		cout << *itor++;
+	}
+	cout << endl;
 }
 

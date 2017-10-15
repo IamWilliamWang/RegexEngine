@@ -7,7 +7,7 @@
 #include "Nfa.h"
 
 using namespace std;
-enum { READY = 0, SUCCESS = 1, FAIL = -1};
+enum { READY = -1, SUCCESS = 1, FAIL = 0};
 
 class State
 {
