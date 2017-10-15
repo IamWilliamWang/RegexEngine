@@ -71,7 +71,7 @@ State *Nfa::regex2nfa(char *reg, State *start)
 		case '+':	/* one or more */
 			out = newEdge(currentEnd, currentEnd, edgeList.back()->type, NEXCLUDED);
 			break;
-		case 'ги':
+		case '(':
 			regRead++;
 			currentStart = currentEnd;
 			currentEnd = regex2nfa(regRead, currentEnd);
