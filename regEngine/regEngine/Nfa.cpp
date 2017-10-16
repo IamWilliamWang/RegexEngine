@@ -70,6 +70,10 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			break;
 		case '+':	/* one or more */
 			out = newEdge(currentEnd, currentEnd, edgeList.back()->type, NEXCLUDED);
+			State alt = *currentEnd;
+			currentStart->merge(&alt);
+			stateList.remove(alternate);
+			currentEnd = currentStart;
 			break;
 		case '(':
 			regRead++;
@@ -82,7 +86,6 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			regRead++;
 			currentStart = currentEnd;
 			if((currentEnd = group(currentEnd)) == nullptr) return nullptr;
-			stateList.push_back(currentEnd);
 			break;	
 		case '^':
 			regRead++;
@@ -145,11 +148,16 @@ State *Nfa::group(State *top)
 		case 'Z':
 			out = newEdge(top, s, UCASES, ifexclude);
 			break;
+		case '\\':
+			regRead++;
+			if ((s = preDefine(top)) == nullptr) return nullptr;
+			break;
 		default:
 			cout << "NFA built failed, please check if the regular expression is right!" << endl;
 			return	nullptr;
 		}		
 	}
+	stateList.push_back(s);
 	return s;
 }
 
@@ -157,8 +165,7 @@ State *Nfa::preDefine(State *top)
 {
 	Edge *out, *out2, *out3;
 	State *s = new State();
-	for (regRead; *regRead != ']'; regRead++) {
-		switch (*regRead) {
+	switch (*regRead) {
 		case 'd':
 			out = newEdge(top, s, NUM, NEXCLUDED);
 			break;
@@ -183,8 +190,7 @@ State *Nfa::preDefine(State *top)
 			break;
 		default:
 			cout << "NFA built failed, please check if the regular expression is right!" << endl;
-			return	nullptr;
-		}		
+			return	nullptr;		
 	}
 	return s;
 }
@@ -200,7 +206,7 @@ Edge *Nfa::newEdge(State * start, State * end, int type, int exclude = NEXCLUDED
 
 int Nfa::match(char *file)
 {
-	
+	bool everMatched = false;
 	FILE *fp;
 	if (!(fp = fopen(file, "r"))) 
 	{
@@ -239,10 +245,14 @@ int Nfa::match(char *file)
 			continue;
 		}
 		printMatched();
+		everMatched = true;
 		refresh();
 		matchedChar.clear();
 	}	
-	return SUCCESS;
+	if (everMatched)
+		return SUCCESS;
+
+	return FAIL;
 }
  
 int Nfa::step(State *current)
@@ -276,7 +286,6 @@ int Nfa::step(State *current)
 
 		temp.pop_back();
 	}
-
 	return FAIL;
 }
 

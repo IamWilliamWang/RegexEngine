@@ -7,7 +7,7 @@
 #define EDGE_H
 
 enum { NEXCLUDED = false, EXCLUDED = true };
-enum { LCASES=256, UCASES=257, NUM=258, EPSILON=259, ANY=260, WS=262 };
+enum { LCASES=256, UCASES=257, NUM=258, EPSILON=259, ANY=260, WS=261 };
 
 class State;
 class Edge
@@ -32,7 +32,7 @@ public:
 		case ANY:
 			if (*p > -1 && *p < 128) return !this->exclude;
 		case WS:
-			if ((*p > 96 && *p < 123) || (*p > 64 && *p < 91) || (*p > 47 && *p < 58)) return !this->exclude;
+ 			if ((*p == '\t') || (*p == '\n') || (*p == '\f')|| (*p== '\r') || (*p== '\x0B')) return !this->exclude;
 		default:
 			if (type == *p) return !this->exclude;
 		}
