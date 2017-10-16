@@ -1,4 +1,9 @@
-# 正则表达式引擎
+# 简单的正则表达式引擎实现
+---
+[toc]
+
+---
+本文介绍了一个简单的正则表达式引擎的实现，总共用了四百五十行左右的代码，完整的code可以在[码云](https://gitee.com/Beansi/RegEngine)上找到。
 ## 基本的数据结构定义
 核心思路是读取正则表达式以后生成对应的NFA，NFA中有边和状态两个结构。边的结构记录了它的起点和终点，同时通过枚举类型记录匹配的其他需求。
 ```
@@ -72,6 +77,12 @@ default:
 	stateList.push_back(currentEnd);
 	break;
 ```
+如下图所示
+
+![create new edge][1]
+接下来的符号处理都假定初始状态如下图所示
+
+![current stage][2]
 ### '|'的处理
 以**currentStart**指向的状态作为子NFA的起点，同时将子NFA的终点状态和原NFA的终点进行合并。
 ```
@@ -83,6 +94,9 @@ case '|':	// alternate
 	stateList.remove(alternate);
 	regRead--;
 ```
+如下图所示
+
+![spilt the edges][3]
 ### '?' & '*' & '+'的处理
 读取到问号只需要在上一条边的基础上继续连接原有的边即可。
 ```
@@ -107,7 +121,11 @@ case '+':	/* one or more */
 		newEdge(currentEnd, (*itor)->end, (*itor)->type, (*itor)->exclude);
 	break;
 ```
-## 简单的分组支持
+如下图所示：
+
+![special caracters][4]
+
+### 简单的分组支持
 对于中括号和括号进行了一定的支持，括号直接递归调用NFA的生成函数，中括号和预定义字符都有其对应的函数进行支持。
 ##NFA匹配
 匹配过程采用了递归的方式，**step**函数调用**match**函数匹配边和文件字符，匹配成功后即递归调用进入下一个状态。
@@ -133,7 +151,12 @@ for(;itor != current->OutEdges.end();itor++)
 return FAIL;
 ```
 ##结果
-![测试用例结果][1]
+较好的通过了测试用例，但是没有进一步拓展功能，只是一个简单的正则表达式，同时也有些取巧，都只对字符进行了一次扫描，没有进行完整的词法分析和语法分析，程序在四百五十行左右的情况下，其实是不够健壮的。
+![测试用例结果][5]
 
 
-  [1]: http://static.zybuluo.com/Wayne-Z/hi8zq62xg1brvxbl2pxjecs2/reg.PNG
+  [1]: http://static.zybuluo.com/Wayne-Z/fxqdgtitghmmsgvc45t3el8y/reg1.PNG
+  [2]: http://static.zybuluo.com/Wayne-Z/pbhuy4zdee9ihpu8bqotvibr/reg3.PNG
+  [3]: http://static.zybuluo.com/Wayne-Z/3jlz7sp5bfrt04761wmvc1nz/reg2.PNG
+  [4]: http://static.zybuluo.com/Wayne-Z/ypborzvmt4ujqaeu7ttddnqh/reg4.PNG
+  [5]: http://static.zybuluo.com/Wayne-Z/hi8zq62xg1brvxbl2pxjecs2/reg.PNG
