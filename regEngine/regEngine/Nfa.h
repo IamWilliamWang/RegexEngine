@@ -30,7 +30,7 @@ private:
 	State *regex2nfa(char *reg, State *s);
 	State *group(State *top);
 	State *preDefine(State *top);
-	Edge *newEdge(State * start, State * end, int type, int exclude);
+	void newEdge(State * start, State * end, int type, int exclude);
 	int step(State *current);
 	void printMatched();
 	void refresh();

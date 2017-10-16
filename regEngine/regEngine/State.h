@@ -2,7 +2,7 @@
 #ifndef STATE_H
 #define STATE_H
 
-#include<vector>
+#include<list>
 #include"Edge.h"
 #include "Nfa.h"
 
@@ -13,8 +13,8 @@ class State
 {
 public:
 	int status;
-	std::vector<Edge *> InEdges;
-	std::vector<Edge *> OutEdges;
+	std::list<Edge *> InEdges;
+	std::list<Edge *> OutEdges;
 
 public:
 	State();

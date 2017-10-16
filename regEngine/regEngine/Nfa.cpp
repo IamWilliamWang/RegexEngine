@@ -24,9 +24,9 @@ Nfa::Nfa(char *reg)
 
 State *Nfa::regex2nfa(char *reg, State *start)
 {	
-	Edge *out;
 	State *currentEnd, *currentStart;
 	State *alternate;
+	list<Edge *>::iterator itor;
 
 	if (regex == NULL)
 		return NULL;
@@ -37,7 +37,7 @@ State *Nfa::regex2nfa(char *reg, State *start)
 		case '.':	/* any */
 			currentStart = currentEnd;
 			currentEnd = new State();
-			out = newEdge(currentStart, currentEnd, ANY, NEXCLUDED);		
+			newEdge(currentStart, currentEnd, ANY, NEXCLUDED);		
 			stateList.push_back(currentEnd);
 			break;
 		case '|':	// alternate 
@@ -49,7 +49,7 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			regRead--;
 			break;
 		case '?':	// zero or one 
-			out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
+			newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
 			break;
 		case '*':	// zero or more 
 			alternate = currentEnd;
@@ -58,10 +58,9 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			currentEnd = currentStart;
 			break;
 		case '+':	/* one or more */
-			out = newEdge(currentEnd, currentEnd, edgeList.back()->type, NEXCLUDED);			
-			currentStart->merge(&alt);
-			stateList.remove(alternate);
-			currentEnd = currentStart;
+			itor = currentStart->OutEdges.begin();
+			for (;itor != currentStart->OutEdges.end();itor++)
+				newEdge(currentEnd, (*itor)->end, (*itor)->type, (*itor)->exclude);
 			break;
 		case '(':
 			regRead++;
@@ -79,7 +78,7 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			regRead++;
 			currentStart = currentEnd;
 			currentEnd = new State();
-			out = newEdge(currentStart, currentEnd, *regRead, EXCLUDED);
+			newEdge(currentStart, currentEnd, *regRead, EXCLUDED);
 			stateList.push_back(currentEnd);
 			break;
 		case '\\':
@@ -97,7 +96,7 @@ State *Nfa::regex2nfa(char *reg, State *start)
 		default:
 			currentStart = currentEnd;
 			currentEnd = new State();
-			out = newEdge(currentStart, currentEnd, *regRead, NEXCLUDED);
+			newEdge(currentStart, currentEnd, *regRead, NEXCLUDED);
 			stateList.push_back(currentEnd);
 			break;
 		}
@@ -107,9 +106,7 @@ State *Nfa::regex2nfa(char *reg, State *start)
 
 State *Nfa::group(State *top)
 {
-	Edge *out;
 	State *s = new State();
-
 	bool ifexclude = NEXCLUDED;
 	if (*regRead == '^') {
 		regRead++;
@@ -127,13 +124,13 @@ State *Nfa::group(State *top)
 			}
 			break;
 		case '9':
-			out = newEdge(top, s, NUM, ifexclude);
+			newEdge(top, s, NUM, ifexclude);
 			break;
 		case 'z':
-			out = newEdge(top, s, LCASES, ifexclude);
+			newEdge(top, s, LCASES, ifexclude);
 			break;
 		case 'Z':
-			out = newEdge(top, s, UCASES, ifexclude);
+			newEdge(top, s, UCASES, ifexclude);
 			break;
 		case '\\':
 			regRead++;
@@ -150,30 +147,29 @@ State *Nfa::group(State *top)
 
 State *Nfa::preDefine(State *top)
 {
-	Edge *out, *out2, *out3;
 	State *s = new State();
 	switch (*regRead) {
 		case 'd':
-			out = newEdge(top, s, NUM, NEXCLUDED);
+			newEdge(top, s, NUM, NEXCLUDED);
 			break;
 		case 'D':
-			out = newEdge(top, s, NUM, EXCLUDED);
+			newEdge(top, s, NUM, EXCLUDED);
 			break;
 		case 's':
-			out = newEdge(top, s, WS, NEXCLUDED);
+			newEdge(top, s, WS, NEXCLUDED);
 			break;
 		case 'S':
-			out = newEdge(top, s, WS, EXCLUDED);
+			newEdge(top, s, WS, EXCLUDED);
 			break;
 		case 'w':
-			out = newEdge(top, s, NUM, NEXCLUDED);
-			out2 = newEdge(top, s, UCASES, NEXCLUDED);
-			out3 = newEdge(top, s, LCASES, NEXCLUDED);
+			newEdge(top, s, NUM, NEXCLUDED);
+			newEdge(top, s, UCASES, NEXCLUDED);
+			newEdge(top, s, LCASES, NEXCLUDED);
 			break;
 		case 'W':
-			out = newEdge(top, s, NUM, EXCLUDED);
-			out2 = newEdge(top, s, UCASES, EXCLUDED);
-			out3 = newEdge(top, s, LCASES, EXCLUDED);
+			newEdge(top, s, NUM, EXCLUDED);
+			newEdge(top, s, UCASES, EXCLUDED);
+			newEdge(top, s, LCASES, EXCLUDED);
 			break;
 		default:
 			cout << "NFA built failed, please check if the regular expression is right!" << endl;
@@ -182,13 +178,12 @@ State *Nfa::preDefine(State *top)
 	return s;
 }
 
-Edge *Nfa::newEdge(State * start, State * end, int type, int exclude = NEXCLUDED)
+void Nfa::newEdge(State * start, State * end, int type, int exclude = NEXCLUDED)
 {
 	Edge *out = new Edge(start, end, type, exclude);
 	end->patch(out, end);
 	start->patch(start, out);
 	edgeList.push_back(out);
-	return out;
 }
 
 int Nfa::match(char *file)
@@ -243,35 +238,28 @@ int Nfa::match(char *file)
 }
  
 int Nfa::step(State *current)
-{
-	vector<Edge*> temp = current->OutEdges;
-	Edge *currentEdge;
+{	
+	list<Edge *>::iterator itor;
+	itor = current->OutEdges.begin();
 
 	if (End->status == SUCCESS) 
 		return SUCCESS;
 
-	while (!temp.empty())
+	for(;itor != current->OutEdges.end();itor++)
 	{	
-		currentEdge = temp.back();
-		if (currentEdge->match(fileRead))
+		if ((*itor)->match(fileRead))
 		{
-			currentEdge->end->status = SUCCESS;
+			(*itor)->end->status = SUCCESS;
 			matchedChar.push_back(*fileRead);
 			++fileRead;
-			if (step(currentEdge->end))
-			{
+			if (step((*itor)->end))
 				return SUCCESS;
-			}
-			else
-			{	
-				--fileRead;
-				matchedChar.pop_back();
-			}
-		}
-		if (currentEdge->type == EPSILON && step(currentEdge->end))
-			return SUCCESS;
 
-		temp.pop_back();
+			--fileRead;
+			matchedChar.pop_back();
+		}
+		if ((*itor)->type == EPSILON && step((*itor)->end))
+			return SUCCESS;
 	}
 	return FAIL;
 }
