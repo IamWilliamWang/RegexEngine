@@ -25,14 +25,19 @@ public:
 		{
 		case LCASES:
 			if ( *p > 96 && *p < 123) return !this->exclude;
+			break;
 		case UCASES:
 			if ( *p > 64 && *p < 91) return !this->exclude;
+			break;
 		case NUM:
 			if (*p > 47 && *p < 58) return !this->exclude;
+			break;
 		case ANY:
 			if (*p > -1 && *p < 128) return !this->exclude;
+			break;
 		case WS:
- 			if ((*p == '\t') || (*p == '\n') || (*p == '\f')|| (*p== '\r') || (*p== '\x0B')) return !this->exclude;
+ 			if ((*p == '\t') || (*p == '\n') || (*p == '\f')|| (*p == '\r') || (*p == '\x0B')) return !this->exclude;
+			break;
 		default:
 			if (type == *p) return !this->exclude;
 		}
