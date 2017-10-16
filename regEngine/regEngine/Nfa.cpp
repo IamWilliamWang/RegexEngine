@@ -52,25 +52,13 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
 			break;
 		case '*':	// zero or more 
-			/*if (currentEnd != currentStart + 1) //for case of group
-			{
-				out = newEdge(currentEnd, currentStart, EPSILON, NEXCLUDED);
-				out = newEdge(currentStart, currentEnd, EPSILON, NEXCLUDED);
-			}*/
-			/*edgeList.pop_back();
-			currentEnd = currentStart;
-			out = edgeList.back();
-			out = newEdge(currentStart, currentEnd, out->type, NEXCLUDED);
-			stateList.pop_back();
-			currentEnd = stateList.back();*/
 			alternate = currentEnd;
 			currentStart->merge(alternate);
 			stateList.remove(alternate);
 			currentEnd = currentStart;
 			break;
 		case '+':	/* one or more */
-			out = newEdge(currentEnd, currentEnd, edgeList.back()->type, NEXCLUDED);
-			State alt = *currentEnd;
+			out = newEdge(currentEnd, currentEnd, edgeList.back()->type, NEXCLUDED);			
 			currentStart->merge(&alt);
 			stateList.remove(alternate);
 			currentEnd = currentStart;
@@ -127,7 +115,6 @@ State *Nfa::group(State *top)
 		regRead++;
 		ifexclude = EXCLUDED;
 	}
-
 	for (regRead; *regRead !=']'; regRead++) {
 		switch (*regRead) {
 		case '0':
@@ -299,7 +286,6 @@ void Nfa::refresh() {
 		(*itor)->status = FAIL;
 		itor++;
 	}
-
 }
 
 void Nfa::printMatched() {
