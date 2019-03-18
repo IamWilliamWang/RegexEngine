@@ -17,8 +17,7 @@ int main(int argc, char **argv)
 			cout << "Finished finding matched strings in " << argv[i] << ". Successed!" << endl;
 		}
 		else {
-			cout << "Finished finding matched strings in "<< argv[i] << ". No matched strings!" << endl;
-		}			
+			cout << "Finished finding matched strings in " << argv[i] << ". No matched strings!" << endl;
+		}
 	return 0;
 }
-

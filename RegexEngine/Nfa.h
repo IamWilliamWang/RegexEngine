@@ -23,8 +23,7 @@ public:
 
 public:
 	Nfa(char *reg);
-	int match(char *file);
-
+	int match(char *str);
 
 private:
 	State *regex2nfa(char *reg, State *s);

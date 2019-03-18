@@ -74,6 +74,8 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			currentStart = currentEnd;
 			if((currentEnd = group(currentEnd)) == nullptr) return nullptr;
 			break;	
+		case ']':
+			return currentEnd;
 		case '^':
 			regRead++;
 			currentStart = currentEnd;
