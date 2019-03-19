@@ -74,8 +74,6 @@ State *Nfa::regex2nfa(char *reg, State *start)
 			currentStart = currentEnd;
 			if((currentEnd = group(currentEnd)) == nullptr) return nullptr;
 			break;	
-		case ']':
-			return currentEnd;
 		case '^':
 			regRead++;
 			currentStart = currentEnd;
@@ -188,38 +186,13 @@ void Nfa::newEdge(State * start, State * end, int type, int exclude = NEXCLUDED)
 	edgeList.push_back(out);
 }
 
-int Nfa::match(char *file)
+int Nfa::match(char *content)
 {
 	bool everMatched = false;
-	FILE *fp;
-	if (!(fp = fopen(file, "r"))) 
-	{
-		cout << "File: " << *file << " open failed, try again." << endl;
-		return NULL;
-	}
-	char result[MAX_SIZE] = { '\0' };
-	int cnt = 0;
-	for (; !feof(fp); cnt++) {
-		char c = fgetc(fp);
-		switch (c) {
-		case '\t':
-		case '\n':
-		case '\f':
-		case '\r':
-		case '\x0B':
-			cnt--;
-			break;
-		default:
-			result[cnt] = c;
-			break;
-		}	
-	}
-	fclose(fp);
-
 	this->Start->status = SUCCESS;
-	fileRead = result;
+	fileRead = content;
 	
-	while (*fileRead != EOF)
+	while (*fileRead != '\0')
 	{
 		if (step(this->Start) == FAIL)
 		{
