@@ -24,13 +24,13 @@ public:
 		switch (type)
 		{
 		case LCASES:
-			if ( *p > 96 && *p < 123) return !this->exclude;
+			if ( *p >= 'a' && *p <= 'z') return !this->exclude;
 			break;
 		case UCASES:
-			if ( *p > 64 && *p < 91) return !this->exclude;
+			if ( *p >= 'A' && *p <= 'Z') return !this->exclude;
 			break;
 		case NUM:
-			if (*p > 47 && *p < 58) return !this->exclude;
+			if (*p >= '0' && *p <= '9') return !this->exclude;
 			break;
 		case ANY:
 			if (*p > -1 && *p < 128) return !this->exclude;
