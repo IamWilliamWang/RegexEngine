@@ -7,19 +7,26 @@
 #define EDGE_H
 
 enum { NEXCLUDED = false, EXCLUDED = true };
-enum { LCASES=256, UCASES=257, NUM=258, EPSILON=259, ANY=260, WS=261 };
+enum Type { LCASES=256, UCASES=257, NUM=258, EPSILON=259, ANY=260, WS=261, INPUTCHAR=262 };
 
 class State;
 class Edge
 {
-public:
+private:
 	State *start;
 	State *end;
-	int type;
-	int exclude;
-
+	Type type;
+	bool exclude;
+	char inputChar;//当Type是INPUTCHAR时储存char，不是的时候储存'\0'
 public:
-	Edge(State *s, State *e, int t, bool ex = NEXCLUDED) :start(s), end(e), type(t), exclude(ex) {};
+	/*
+	 *
+	 */
+	Edge(State *start, State *end, Type type, bool exclude = NEXCLUDED) :start(start), end(end), type(type), inputChar('\0'),exclude(exclude) {};
+	Edge(State *start, State *end, char inputChar, bool exclude = NEXCLUDED) :start(start), end(end), type(Type::INPUTCHAR), inputChar(inputChar), exclude(exclude) {};
+	/*
+	 *
+	 */
 	bool match(char *p) {
 		switch (type)
 		{
@@ -38,11 +45,43 @@ public:
 		case WS:
  			if ((*p == '\t') || (*p == '\n') || (*p == '\f')|| (*p == '\r') || (*p == '\x0B')) return !this->exclude;
 			break;
+		case INPUTCHAR:
+			if (this->inputChar == *p)
+				return !this->exclude;
 		default:
-			if (type == *p) return !this->exclude;
+			throw "Unexpected Type!";
 		}
 		return this->exclude;
 	};	
+
+	/* Getters and setters */
+	void setStart(State* start)	{
+		this->start = start;
+	}
+	State* getStart() {
+		return this->start;
+	}
+	void setEnd(State* end) {
+		this->end = end;
+	}
+	State* getEnd() {
+		return this->end;
+	}
+	void setType(Type type) {
+		this->type = type;
+	}
+	Type getType() {
+		return this->type;
+	}
+	void setExclude(bool exclude) {
+		this->exclude = exclude;
+	}
+	bool getExclude() {
+		return this->exclude;
+	}
+	char getInputChar() {
+		return this->inputChar;
+	}
 };
 
 #endif 

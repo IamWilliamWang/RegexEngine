@@ -82,8 +82,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Nfa.cpp" />
-    <ClCompile Include="State.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="regEngine.rc" />
